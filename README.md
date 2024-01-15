@@ -1,1 +1,18 @@
 # ACS-Team-KKamJi
+
+## Complate :thumbsup:
+- [x] Local Image S3 Upload
+
+## Next Progress :fire:
+- [ ] HTTP 요청을 통해 들어온 파일을 S3에 업로드
+
+## To Do :turtle:
+- [ ] post 조회 API
+- [ ] post 수정 API
+- [ ] post 삭제 API
+
+## API 명세서
+https://docs.google.com/spreadsheets/d/1b4K21uRSqM8BMv-PaZLhBoVLw22vt5KjUfqVjiu8_5k/edit#gid=0
+
+## ERD 
+https://www.erdcloud.com/d/RAvgh29cy7ZfpdeFt
