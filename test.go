@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	file, err := os.Open(`C:\Go\src\test\Gopher.png`) // 로컬 파일 경로
+	file, err := os.Open(`./Gopher.png`) // 로컬 파일 경로
 	if err != nil {
 		fmt.Printf("Unable to open file: %v", err)
 		return
