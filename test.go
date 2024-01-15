@@ -19,7 +19,7 @@ func main() {
 	defer file.Close()
 
 	sess, err := session.NewSession(&aws.Config{
-		Region: aws.String("us-east-1"), // S3 버킷의 리전
+		Region: aws.String("ap-northeast-2"), // S3 버킷의 리전
 	})
 	if err != nil {
 		fmt.Printf("Unable to create session: %v", err)
@@ -31,7 +31,7 @@ func main() {
 	uuid := uuid.New() // UUID생성
 	_, err = uploader.Upload(&s3manager.UploadInput{
 		Bucket: aws.String("kkamji-image-upload-test"), // S3 버킷 이름
-		Key:    aws.String(uuid.String()),  // S3에 저장될 파일 이름 (uuid로)
+		Key:    aws.String(uuid.String()),              // S3에 저장될 파일 이름 (uuid로)
 		Body:   file,
 	})
 
