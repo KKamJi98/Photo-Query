@@ -5,7 +5,7 @@
 - [x] HTTP 요청을 통해 들어온 파일을 S3에 업로드
 
 ## Next Progress :fire:
-- [x] post 생성 API 구현 [RDS에 데이터 적용, return msg]
+- [ ] post 생성 API 구현 [RDS에 데이터 적용, return msg]
 ## To Do :turtle:
 - [ ] post 조회 API
 - [ ] post 수정 API
