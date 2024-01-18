@@ -1,7 +1,7 @@
 package main
 
 import (
-	docs "github.com/ace-team-kkamji/docs"
+	docs "github.com/war-oxi/ace-team-kkamji/docs"
 	"github.com/swaggo/files" // swagger embed files
 	swaggerfiles "github.com/swaggo/files"
 	"github.com/swaggo/gin-swagger" // gin-swagger middleware
