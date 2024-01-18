@@ -1,27 +1,20 @@
 package main
 
 import (
-	docs "github.com/war-oxi/ace-team-kkamji/docs"
-	"github.com/swaggo/files" // swagger embed files
-	swaggerfiles "github.com/swaggo/files"
-	"github.com/swaggo/gin-swagger" // gin-swagger middleware
-	ginSwagger "github.com/swaggo/gin-swagger"
+	// "github.com/swaggo/files" // swagger embed files
+	// swaggerfiles "github.com/swaggo/files"
+	// "github.com/swaggo/gin-swagger" // gin-swagger middleware
+	// ginSwagger "github.com/swaggo/gin-swagger"
+	// docs "github.com/war-oxi/ace-team-kkamji/docs"
 	"github.com/war-oxi/ace-team-kkamji/post"
+	// "github.com/gin-gonic/gin"
+	// "net/http"
 )
 
-func main() {
-	// post.PostCreate()
-	docs.SwaggerInfo.BasePath = "/api/v1"
-	v1 := r.Group("/api/v1")
-	{
-		eg := v1.Group("/example")
-		{
-			eg.GET("/helloworld", Helloworld)
-		}
-	}
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
-}
 
+func main (){
+	post.PostCreate()
+}
 // type Post struct {
 // 	PostID int64 `json:"post_id"`
 // }
