@@ -1,23 +1,26 @@
 package main
 
 import (
-	"database/sql"
-	"log"
-	// "net/http"
-	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
-	"os"
-
-	"fmt"
-	// "log"
-	_ "github.com/go-sql-driver/mysql"
-	"post"
+	docs "github.com/ace-team-kkamji/docs"
+	"github.com/swaggo/files" // swagger embed files
+	swaggerfiles "github.com/swaggo/files"
+	"github.com/swaggo/gin-swagger" // gin-swagger middleware
+	ginSwagger "github.com/swaggo/gin-swagger"
+	"github.com/war-oxi/ace-team-kkamji/post"
 )
 
 func main() {
-	post.PostCreate()
+	// post.PostCreate()
+	docs.SwaggerInfo.BasePath = "/api/v1"
+	v1 := r.Group("/api/v1")
+	{
+		eg := v1.Group("/example")
+		{
+			eg.GET("/helloworld", Helloworld)
+		}
+	}
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 }
-
 
 // type Post struct {
 // 	PostID int64 `json:"post_id"`
