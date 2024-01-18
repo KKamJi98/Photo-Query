@@ -98,7 +98,7 @@ func GetPostsByUserId(c *gin.Context) {
 	userId := c.Param("userId")
 	rows, err := db.Query("SELECT post_id, user_id, image_url, content, create_at, update_at, delete_at FROM posts WHERE user_id = ?", userId)
 	if err != nil {
-        log.Printf("Error querying posts for user %v: %v", userId, err)
+		log.Printf("Error querying posts for user %v: %v", userId, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error querying posts"})
 		return
 	}
@@ -119,7 +119,7 @@ func GetPostsByUserId(c *gin.Context) {
 	})
 }
 
-func GetPostByPostId(c *gin.Context){
+func GetPostByPostId(c *gin.Context) {
 	err := godotenv.Load("./env/.env")
 	if err != nil {
 		log.Fatal("Error loading .env file")
@@ -147,7 +147,7 @@ func GetPostByPostId(c *gin.Context){
 	postId := c.Param("postId")
 	rows, err := db.Query("SELECT post_id, user_id, image_url, content, create_at, update_at, delete_at FROM posts WHERE user_id = ?", postId)
 	if err != nil {
-        log.Printf("Error querying posts for user %v: %v", postId, err)
+		log.Printf("Error querying posts for user %v: %v", postId, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error querying posts"})
 		return
 	}
