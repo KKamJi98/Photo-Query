@@ -1,4 +1,4 @@
-module github.com/War-Oxi/ACS-Team-KKamJi
+module github.com/War-Oxi/ACS-Team-KKamJi/post
 
 go 1.20
 

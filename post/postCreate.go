@@ -1,4 +1,4 @@
-package main
+package post
 
 import (
 	"database/sql"
@@ -16,7 +16,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func main() {
+func PostCreate() {
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
