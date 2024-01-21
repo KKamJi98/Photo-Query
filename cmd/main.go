@@ -1,7 +1,7 @@
 package main
 
 import (
-	"ace-app/post" // post 패키지 임포트
+	"ace-app/posts" // post 패키지 임포트
 	"github.com/gin-gonic/gin"
 )
 
