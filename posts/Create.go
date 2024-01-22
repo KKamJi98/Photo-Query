@@ -27,7 +27,7 @@ func CreatePost(c *gin.Context) {
 	dbEndpoint := os.Getenv("DB_ENDPOINT")
 	dbName := os.Getenv("DB_NAME")
 
-	// 데이터베이스 연결 
+	// 데이터베이스 연결
 	db, err := sql.Open("mysql", fmt.Sprintf("%v:%v@tcp(%v:3306)/%v", dbUser, dbPassword, dbEndpoint, dbName))
 	if err != nil {
 		log.Fatal("Error connecting to database: ", err)
