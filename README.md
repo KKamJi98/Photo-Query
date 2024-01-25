@@ -1,5 +1,7 @@
 # ACS-Team-KKamJi
 
+port : 8080
+
 ## Complate :thumbsup:
 - [x] Local Image S3 Upload
 - [x] HTTP 요청을 통해 들어온 파일을 S3에 업로드
