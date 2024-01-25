@@ -13,7 +13,7 @@ import (
 	"github.com/joho/godotenv"
 	"log"
 	"os"
-	"time"
+	// "time"
 )
 
 func CreatePost(c *gin.Context) {
@@ -50,19 +50,13 @@ func CreatePost(c *gin.Context) {
 		return
 	}
 
-	file, err := c.FormFile("image")
+	form, _ := c.MultipartForm()
+	fileHeader := form.File["images"]
 	if err != nil {
 		c.JSON(500, gin.H{"message": "File upload error"})
 		return
 	}
-
-	src, err := file.Open()
-	if err != nil {
-		c.JSON(500, gin.H{"message": "File open error"})
-		return
-	}
-	defer src.Close()
-
+	//aws session 생성
 	sess, err := session.NewSession(&aws.Config{
 		Region: aws.String("ap-northeast-2"), //S3 Bucket의 Region
 	})
@@ -71,32 +65,46 @@ func CreatePost(c *gin.Context) {
 		return
 	}
 
-	uploader := s3manager.NewUploader(sess)
-	uuid := uuid.New()
-	uploadOutput, err := uploader.Upload(&s3manager.UploadInput{
-		Bucket: aws.String("kkamji-image-upload-test"),
-		Key:    aws.String(uuid.String()),
-		Body:   src,
-	})
+	for _, file := range fileHeader {
+		fmt.Printf("file => %T\t fileHeader => %v\n", file, fileHeader)
+		log.Println(file.Filename)
 
-	if err != nil {
-		c.JSON(500, gin.H{"message": fmt.Sprintf("Unable to upload file: %v", err)})
-		return
+		src, err := file.Open()
+		if err != nil {
+			c.JSON(500, gin.H{"message": "File open error"})
+			return
+		}
+		defer src.Close()
+
+		// 파일 전송
+		uploader := s3manager.NewUploader(sess)
+		uuid := uuid.New()
+		uploadOutput, err := uploader.Upload(&s3manager.UploadInput{
+			Bucket: aws.String("kkamji-image-upload-test"),
+			Key:    aws.String(uuid.String()),
+			Body:   src,	
+		})
+		if err != nil {
+			c.JSON(500, gin.H{"message": fmt.Sprintf("Unable to upload file: %v", err)})
+			return
+		}
+		imageURL := uploadOutput.Location // S3에 업로드된 이미지 URL
+		log.Printf("S3 image name => %v", imageURL)
 	}
-
-	imageURL := uploadOutput.Location // S3에 업로드된 이미지 URL
-	log.Printf("S3 image name => %v", imageURL)
-	currentTime := time.Now()
-
+	// currentTime := time.Now()
 	// RDS에 데이터 저장
-	_, err = db.Exec("INSERT INTO posts (user_id, image_url, content, create_at, update_at) VALUES (?, ?, ?, ?, ?)",
-		post.UserId, imageURL, post.Content, currentTime, currentTime)
-	if err != nil {
-		log.Printf("post.UserId => %v", post.UserId)   // UserId 확인용 코드
-		log.Printf("post.Content => %v", post.Content) // Content 확인용 코드
-		c.JSON(500, gin.H{"message": fmt.Sprintf("Unable to save post data: %v", err)})
-		return
+	// _, err = db.Exec("INSERT INTO posts (user_id, image_url, content, create_at, update_at) VALUES (?, ?, ?, ?, ?)",
+	// 	post.UserId, imageURL, post.Content, currentTime, currentTime)
+	// if err != nil {
+	// 	log.Printf("post.UserId => %v", post.UserId)   // UserId 확인용 코드
+	// 	log.Printf("post.Content => %v", post.Content) // Content 확인용 코드
+	// 	c.JSON(500, gin.H{"message": fmt.Sprintf("Unable to save post data: %v", err)})
+	// 	return
+	// }
+	log.Printf("%T\t %v %v", fileHeader, fileHeader, len(fileHeader))
+	if len(fileHeader) == 0{
+		c.JSON(200, gin.H{"message": "no file in"})
+	} else{
+		c.JSON(200, gin.H{"message": "File uploaded successfully"})
 	}
-
-	c.JSON(200, gin.H{"message": "File and post data uploaded successfully"})
 }
