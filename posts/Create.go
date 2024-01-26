@@ -13,8 +13,6 @@ import (
 	"log"
 	"strings"
 	"ace-app/databases"
-	// "ace-app/database"
-	// "time"
 )
 
 func CreatePost(c *gin.Context) {
