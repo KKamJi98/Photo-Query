@@ -2,7 +2,6 @@ package post
 
 import (
 	"archive/zip"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
@@ -11,35 +10,16 @@ import (
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/google/uuid"
-	"github.com/joho/godotenv"
 	"log"
-	"os"
 	"strings"
+	"ace-app/databases"
+	// "ace-app/database"
 	// "time"
 )
 
 func CreatePost(c *gin.Context) {
-	err := godotenv.Load("./env/.env")
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-
-	dbUser := os.Getenv("DB_USER")
-	dbPassword := os.Getenv("DB_PASSWORD")
-	dbEndpoint := os.Getenv("DB_ENDPOINT")
-	dbName := os.Getenv("DB_NAME")
-
-	// 데이터베이스 연결
-	db, err := sql.Open("mysql", fmt.Sprintf("%v:%v@tcp(%v:3306)/%v", dbUser, dbPassword, dbEndpoint, dbName))
-	if err != nil {
-		log.Fatal("Error connecting to database: ", err)
-	}
+	db := database.ConnectDB()
 	defer db.Close()
-
-	// 데이터베이스 연결 테스트
-	if err := db.Ping(); err != nil {
-		log.Fatal("Cannot connect to database: ", err)
-	}
 
 	jsonData := c.PostForm("json_data") // "json_data"는 프론트엔드에서 전송하는 JSON 데이터의 필드 이름
 	// json_data를 post 구조체의 변수에 적용
@@ -52,10 +32,10 @@ func CreatePost(c *gin.Context) {
 		return
 	}
 
-	form, _ := c.MultipartForm()
+	form, err := c.MultipartForm()
 	fileHeader := form.File["images"]
 	if err != nil {
-		c.JSON(500, gin.H{"message": "File upload error"})
+		c.JSON(500, gin.H{"message": "File receive error"})
 		return
 	}
 
@@ -63,6 +43,7 @@ func CreatePost(c *gin.Context) {
 	sess, err := session.NewSession(&aws.Config{
 		Region: aws.String("ap-northeast-2"), //S3 Bucket의 Region
 	})
+	// fmt.Printf("%T\n", sess)
 	if err != nil {
 		c.JSON(500, gin.H{"message": "AWS session error"})
 		return
