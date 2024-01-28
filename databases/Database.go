@@ -2,13 +2,14 @@ package database
 
 import (
 	"database/sql"
-	"log"
-	"github.com/joho/godotenv"
-	_ "github.com/go-sql-driver/mysql"
-	"os"
 	"fmt"
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/joho/godotenv"
+	"log"
+	"os"
 )
-func ConnectDB() *sql.DB{
+
+func ConnectDB() *sql.DB {
 	err := godotenv.Load("./env/.env")
 	if err != nil {
 		log.Fatal("Error loading .env file")
