@@ -1,21 +1,25 @@
 package post
 
 import (
-    "archive/zip"
-    "encoding/json"
-    "fmt"
-    "github.com/aws/aws-sdk-go/aws"
-    "github.com/aws/aws-sdk-go/aws/session"
-    "github.com/aws/aws-sdk-go/service/s3/s3manager"
-    "github.com/gin-gonic/gin"
-    _ "github.com/go-sql-driver/mysql"
-    "github.com/google/uuid"
-    "log"
-    "mime/multipart"
-    "strings"
-    "sync"
-    "ace-app/databases"
+	"ace-app/databases"
+	"archive/zip"
+	"encoding/json"
+	"fmt"
+	"io"
+	"log"
+	"mime/multipart"
+	"strings"
+	"sync"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/gin-gonic/gin"
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/google/uuid"
 )
+
+var uploadFileCount int
 
 func CreatePost(c *gin.Context) {
     db := database.ConnectDB()
@@ -48,7 +52,13 @@ func CreatePost(c *gin.Context) {
 
     var wg sync.WaitGroup
     errChan := make(chan error, len(fileHeader))
-    filesPerRoutine := len(fileHeader) / 4
+
+	var filesPerRoutine int
+	if len(fileHeader) < 8 {
+		filesPerRoutine = 1
+	} else {
+		filesPerRoutine = len(fileHeader) / 8
+	}
 
     for i := 0; i < len(fileHeader); i += filesPerRoutine {
         end := i + filesPerRoutine
@@ -74,6 +84,7 @@ func CreatePost(c *gin.Context) {
         }
     }
 
+	log.Println(uploadFileCount, " files upload Complete")
     c.JSON(200, gin.H{"message": "File processing completed"})
 }
 
@@ -91,6 +102,7 @@ func processFile(file *multipart.FileHeader, sess *session.Session, errChan chan
             errChan <- err
             return
         }
+		log.Println("파일 크기 =>z" ,len(zipReader.File))
         for _, imageFile := range zipReader.File {
             if isImageFile(imageFile.Name) {
                 zipFileReader, err := imageFile.Open()
@@ -108,7 +120,7 @@ func processFile(file *multipart.FileHeader, sess *session.Session, errChan chan
     }
 }
 
-func uploadToS3(fileReader multipart.File, fileName string, sess *session.Session, errChan chan<- error) {
+func uploadToS3(fileReader io.Reader, fileName string, sess *session.Session, errChan chan<- error) {
     uploader := s3manager.NewUploader(sess)
     uuid := uuid.New()
     fileExtension := getFileExtension(fileName)
@@ -120,6 +132,9 @@ func uploadToS3(fileReader multipart.File, fileName string, sess *session.Sessio
     if err != nil {
         errChan <- err
     }
+	// log.Printf("file upload Complete")
+	uploadFileCount++
+	// fmt.Println("file upload Complete")
 }
 
 func isImageFile(fileName string) bool {
