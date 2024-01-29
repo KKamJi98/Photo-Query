@@ -10,7 +10,7 @@ import (
 	"mime/multipart"
 	"strings"
 	"sync"
-
+	"time"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
@@ -20,17 +20,13 @@ import (
 )
 
 var uploadFileCount int
+var picture struct {
+	UserId  int64  `json:"user_id"`
+}
 
 func CreatePost(c *gin.Context) {
-	db := database.ConnectDB()
-	defer db.Close()
-
 	jsonData := c.PostForm("json_data")
-	var post struct {
-		UserId  int64  `json:"user_id"`
-		Content string `json:"content"`
-	}
-	if err := json.Unmarshal([]byte(jsonData), &post); err != nil {
+	if err := json.Unmarshal([]byte(jsonData), &picture); err != nil {
 		c.JSON(400, gin.H{"message": "Invalid JSON data", "error": err.Error()})
 		return
 	}
@@ -57,8 +53,7 @@ func CreatePost(c *gin.Context) {
 	if len(fileHeader) < 8 {
 		filesPerRoutine = len(fileHeader)
 	} else {
-		// filesPerRoutine = len(fileHeader) / 8
-		filesPerRoutine = len(fileHeader)
+		filesPerRoutine = len(fileHeader) / 8
 	}
 
 	for i := 0; i < len(fileHeader); i += filesPerRoutine {
@@ -88,6 +83,7 @@ func CreatePost(c *gin.Context) {
 	}
 
 	log.Println(uploadFileCount, " files upload Complete")
+	uploadFileCount = 0
 	c.JSON(200, gin.H{"message": "File processing completed"})
 }
 
@@ -136,18 +132,6 @@ func processFile(file *multipart.FileHeader, sess *session.Session, errChan chan
 			}(zipReader.File[i:end])
 		}
 		wg2.Wait()
-		// for _, imageFile := range zipReader.File {
-		// 	if isImageFile(imageFile.Name) {
-		// 		zipFileReader, err := imageFile.Open()
-		// 		if err != nil {
-		// 			errChan <- err
-		// 			continue
-		// 		}
-		// 		defer zipFileReader.Close()
-
-		// 		uploadToS3(zipFileReader, imageFile.Name, sess, errChan)
-		// 	}
-		// }
 	} else if isImageFile(file.Filename) {
 		uploadToS3(src, file.Filename, sess, errChan)
 	}
@@ -157,7 +141,7 @@ func uploadToS3(fileReader io.Reader, fileName string, sess *session.Session, er
 	uploader := s3manager.NewUploader(sess)
 	uuid := uuid.New()
 	fileExtension := getFileExtension(fileName)
-	_, err := uploader.Upload(&s3manager.UploadInput{
+	uploadOutput, err := uploader.Upload(&s3manager.UploadInput{
 		Bucket: aws.String("kkamji-image-upload-test"),
 		Key:    aws.String(fmt.Sprintf("%v%v", uuid.String(), fileExtension)),
 		Body:   fileReader,
@@ -165,9 +149,24 @@ func uploadToS3(fileReader io.Reader, fileName string, sess *session.Session, er
 	if err != nil {
 		errChan <- err
 	}
+
+	db := database.ConnectDB()
+	defer db.Close()
+	currentTime := time.Now()
+	imageURL := uploadOutput.Location
+
+	_, err2 := db.Exec("INSERT INTO Pictures (user_id, image_url, create_at, bookmark) VALUES (?, ?, ?, ?)",
+	picture.UserId, imageURL, currentTime, 0)
+	if err2 != nil {
+		log.Printf("post.UserId => %v", picture.UserId)   // UserId 확인용 코드
+		// log.Printf("post.Content => %v", post.Content) // Content 확인용 코드
+		// c.JSON(500, gin.H{"message": fmt.Sprintf("Unable to save post data: %v", err)})
+		log.Println("Unable to save post data:", err2)
+		return
+	}
+
 	log.Printf("file upload Complete")
 	uploadFileCount++
-	// fmt.Println("file upload Complete")
 }
 
 func isImageFile(fileName string) bool {

@@ -13,7 +13,7 @@ func main() {
 	r.GET("/api/v1/posts", post.GetPosts)
 	r.GET("/api/v1/posts/:postId", post.GetPostByPostId)
 	r.GET("/api/v1/users/:userId/posts", post.GetPostsByUserId)
-	r.DELETE("/api/v1/posts/:postId", post.DeletePostByPostId)
+	// r.DELETE("/api/v1/posts/:postId", post.DeletePostByPostId)
 
 	r.Run(":8080") // 서버 시작
 }
