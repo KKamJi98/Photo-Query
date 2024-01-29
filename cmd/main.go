@@ -10,10 +10,10 @@ func main() {
 
 	// PostCreate API
 	r.POST("/api/v1/posts", post.CreatePost)
-	r.GET("/api/v1/posts", post.GetPosts)
-	r.GET("/api/v1/posts/:postId", post.GetPostByPostId)
-	r.GET("/api/v1/users/:userId/posts", post.GetPostsByUserId)
-	// r.DELETE("/api/v1/posts/:postId", post.DeletePostByPostId)
+	// r.GET("/api/v1/posts", post.GetPosts)
+	// r.GET("/api/v1/posts/:postId", post.GetPostByPostId)
+	// r.GET("/api/v1/users/:userId/posts", post.GetPostsByUserId)
+	r.DELETE("/api/v1/posts", post.DeletePicturesByPostId)
 
 	r.Run(":8080") // 서버 시작
 }

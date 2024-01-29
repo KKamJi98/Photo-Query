@@ -158,7 +158,7 @@ func uploadToS3(fileReader io.Reader, fileName string, sess *session.Session, er
 	_, err2 := db.Exec("INSERT INTO Pictures (user_id, image_url, create_at, bookmark) VALUES (?, ?, ?, ?)",
 	picture.UserId, imageURL, currentTime, 0)
 	if err2 != nil {
-		log.Printf("post.UserId => %v", picture.UserId)   // UserId 확인용 코드
+		log.Printf("picture.UserId => %v", picture.UserId)   // userId 확인용 코드
 		// log.Printf("post.Content => %v", post.Content) // Content 확인용 코드
 		// c.JSON(500, gin.H{"message": fmt.Sprintf("Unable to save post data: %v", err)})
 		log.Println("Unable to save post data:", err2)
