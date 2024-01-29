@@ -1,46 +1,31 @@
 package post
 
 import (
-	"database/sql"
+	"ace-app/databases"
+	"archive/zip"
 	"encoding/json"
 	"fmt"
+	"io"
+	"log"
+	"mime/multipart"
+	"strings"
+	"sync"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/google/uuid"
-	"github.com/joho/godotenv"
-	"log"
-	"os"
-	"time"
 )
 
+var uploadFileCount int
+
 func CreatePost(c *gin.Context) {
-	err := godotenv.Load("./env/.env")
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-
-	dbUser := os.Getenv("DB_USER")
-	dbPassword := os.Getenv("DB_PASSWORD")
-	dbEndpoint := os.Getenv("DB_ENDPOINT")
-	dbName := os.Getenv("DB_NAME")
-
-	// 데이터베이스 연결
-	db, err := sql.Open("mysql", fmt.Sprintf("%v:%v@tcp(%v:3306)/%v", dbUser, dbPassword, dbEndpoint, dbName))
-	if err != nil {
-		log.Fatal("Error connecting to database: ", err)
-	}
+	db := database.ConnectDB()
 	defer db.Close()
 
-	// 데이터베이스 연결 테스트
-	if err := db.Ping(); err != nil {
-		log.Fatal("Cannot connect to database: ", err)
-	}
-
-	jsonData := c.PostForm("json_data") // "json_data"는 프론트엔드에서 전송하는 JSON 데이터의 필드 이름
-	// json_data를 post 구조체의 변수에 적용
+	jsonData := c.PostForm("json_data")
 	var post struct {
 		UserId  int64  `json:"user_id"`
 		Content string `json:"content"`
@@ -50,53 +35,150 @@ func CreatePost(c *gin.Context) {
 		return
 	}
 
-	file, err := c.FormFile("image")
+	form, err := c.MultipartForm()
 	if err != nil {
-		c.JSON(500, gin.H{"message": "File upload error"})
+		c.JSON(500, gin.H{"message": "File receive error"})
 		return
 	}
-
-	src, err := file.Open()
-	if err != nil {
-		c.JSON(500, gin.H{"message": "File open error"})
-		return
-	}
-	defer src.Close()
+	fileHeader := form.File["images"]
 
 	sess, err := session.NewSession(&aws.Config{
-		Region: aws.String("ap-northeast-2"), //S3 Bucket의 Region
+		Region: aws.String("ap-northeast-2"),
 	})
 	if err != nil {
 		c.JSON(500, gin.H{"message": "AWS session error"})
 		return
 	}
 
+	var wg sync.WaitGroup
+	errChan := make(chan error, len(fileHeader))
+
+	var filesPerRoutine int
+	if len(fileHeader) < 8 {
+		filesPerRoutine = len(fileHeader)
+	} else {
+		// filesPerRoutine = len(fileHeader) / 8
+		filesPerRoutine = len(fileHeader)
+	}
+
+	for i := 0; i < len(fileHeader); i += filesPerRoutine {
+		end := i + filesPerRoutine
+		if end > len(fileHeader) {
+			end = len(fileHeader)
+		}
+
+		wg.Add(1)
+		log.Println("wg routine called")
+
+		go func(files []*multipart.FileHeader) {
+			defer wg.Done()
+			for _, file := range files {
+				processFile(file, sess, errChan)
+			}
+		}(fileHeader[i:end])
+	}
+
+	wg.Wait()
+	close(errChan)
+
+	for err := range errChan {
+		if err != nil {
+			log.Printf("Error: %v", err)
+		}
+	}
+
+	log.Println(uploadFileCount, " files upload Complete")
+	c.JSON(200, gin.H{"message": "File processing completed"})
+}
+
+func processFile(file *multipart.FileHeader, sess *session.Session, errChan chan<- error) {
+	src, err := file.Open()
+	if err != nil {
+		errChan <- err
+		return
+	}
+	defer src.Close()
+
+	if strings.HasSuffix(file.Filename, ".zip") {
+		zipReader, err := zip.NewReader(src, file.Size)
+		if err != nil {
+			errChan <- err
+			return
+		}
+		// log.Println("파일 크기 =>z" ,len(zipReader.File))
+		numOfFiles := len(zipReader.File)
+		if numOfFiles < 8 {
+			numOfFiles = 1
+		} else {
+			numOfFiles = len(zipReader.File) / 8
+		}
+		var wg2 sync.WaitGroup
+		for i := 0; i < len(zipReader.File); i += numOfFiles {
+			end := i + numOfFiles
+			if end > len(zipReader.File) {
+				end = len(zipReader.File)
+			}
+			wg2.Add(1)
+			go func(files []*zip.File) {
+				log.Println("wg2 routine called")
+				defer wg2.Done()
+				for _, file := range files {
+					if isImageFile(file.Name) {
+						zipFileReader, err := file.Open()
+						if err != nil {
+							errChan <- err
+							continue
+						}
+						defer zipFileReader.Close()
+						uploadToS3(zipFileReader, file.Name, sess, errChan)
+					}
+				}
+			}(zipReader.File[i:end])
+		}
+		wg2.Wait()
+		// for _, imageFile := range zipReader.File {
+		// 	if isImageFile(imageFile.Name) {
+		// 		zipFileReader, err := imageFile.Open()
+		// 		if err != nil {
+		// 			errChan <- err
+		// 			continue
+		// 		}
+		// 		defer zipFileReader.Close()
+
+		// 		uploadToS3(zipFileReader, imageFile.Name, sess, errChan)
+		// 	}
+		// }
+	} else if isImageFile(file.Filename) {
+		uploadToS3(src, file.Filename, sess, errChan)
+	}
+}
+
+func uploadToS3(fileReader io.Reader, fileName string, sess *session.Session, errChan chan<- error) {
 	uploader := s3manager.NewUploader(sess)
 	uuid := uuid.New()
-	uploadOutput, err := uploader.Upload(&s3manager.UploadInput{
+	fileExtension := getFileExtension(fileName)
+	_, err := uploader.Upload(&s3manager.UploadInput{
 		Bucket: aws.String("kkamji-image-upload-test"),
-		Key:    aws.String(uuid.String()),
-		Body:   src,
+		Key:    aws.String(fmt.Sprintf("%v%v", uuid.String(), fileExtension)),
+		Body:   fileReader,
 	})
-
 	if err != nil {
-		c.JSON(500, gin.H{"message": fmt.Sprintf("Unable to upload file: %v", err)})
-		return
+		errChan <- err
 	}
+	log.Printf("file upload Complete")
+	uploadFileCount++
+	// fmt.Println("file upload Complete")
+}
 
-	imageURL := uploadOutput.Location // S3에 업로드된 이미지 URL
-	log.Printf("S3 image name => %v", imageURL)
-	currentTime := time.Now()
+func isImageFile(fileName string) bool {
+	return strings.HasSuffix(fileName, ".png") || strings.HasSuffix(fileName, ".jpg") || strings.HasSuffix(fileName, ".jpeg")
+}
 
-	// RDS에 데이터 저장
-	_, err = db.Exec("INSERT INTO posts (user_id, image_url, content, create_at, update_at) VALUES (?, ?, ?, ?, ?)",
-		post.UserId, imageURL, post.Content, currentTime, currentTime)
-	if err != nil {
-		log.Printf("post.UserId => %v", post.UserId)   // UserId 확인용 코드
-		log.Printf("post.Content => %v", post.Content) // Content 확인용 코드
-		c.JSON(500, gin.H{"message": fmt.Sprintf("Unable to save post data: %v", err)})
-		return
+func getFileExtension(fileName string) string {
+	for i := range fileName {
+		if fileName[i] == '.' {
+			return fileName[i:]
+		}
 	}
-
-	c.JSON(200, gin.H{"message": "File and post data uploaded successfully"})
+	return ""
 }

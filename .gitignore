@@ -12,7 +12,8 @@
 *.so
 *.dylib
 .env
-
+*.zip
+image
 # Test binary, built with `go test -c`
 *.test
 

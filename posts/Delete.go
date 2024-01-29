@@ -3,12 +3,11 @@ package post
 import (
 	"database/sql"
 	"fmt"
+	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"log"
 	"net/http"
 	"os"
-
-	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 )
 
 func DeletePostByPostId(c *gin.Context) {
