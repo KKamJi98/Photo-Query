@@ -1,4 +1,4 @@
-package post
+package picture
 
 import (
 	"ace-app/databases"
@@ -15,7 +15,7 @@ import (
 
 func DeletePicturesByPostId(c *gin.Context) {
 	type picture struct {
-		PictureId  int64  `json:"picture_id"`
+		PictureID  int64  `json:"picture_id"`
 	}
 	
 	var pictures []picture
@@ -35,7 +35,7 @@ func DeletePicturesByPostId(c *gin.Context) {
 	successCount := 0
 	nofoundCount := 0
 	for _, pic := range pictures {
-		result, err := db.Exec("DELETE FROM Pictures WHERE picture_id = ?", pic.PictureId)
+		result, err := db.Exec("DELETE FROM Pictures WHERE picture_id = ?", pic.PictureID)
 		if err != nil {
 			log.Printf("Error deleting picture: %v", err)
 		}
@@ -43,14 +43,14 @@ func DeletePicturesByPostId(c *gin.Context) {
 		rowsAffected, err := result.RowsAffected()
 		if err != nil {
 			log.Printf("Error getting rows affected: %v", err)
-			log.Printf("picture_id => %v", pic.PictureId)
+			log.Printf("picture_id => %v", pic.PictureID)
 			errorCount++
 			// c.JSON(http.StatusInternalServerError, gin.H{"error": "Error getting rows affected"})
 		} 
 	
 		if rowsAffected == 0 {
 			log.Printf("No picture found with given ID")
-			log.Printf("picture_id => %v", pic.PictureId)
+			log.Printf("picture_id => %v", pic.PictureID)
 			nofoundCount++
 			// c.JSON(http.StatusNotFound, gin.H{"message": "No picture found with given ID"})
 			// return

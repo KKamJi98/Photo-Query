@@ -1,4 +1,4 @@
-package post
+package picture
 
 import (
 	"ace-app/databases"
@@ -20,11 +20,12 @@ import (
 )
 
 var uploadFileCount int
-var picture struct {
-	UserId  int64  `json:"user_id"`
-}
+// type Picture struct {
+// 	UserID  int64  `json:"user_id"`
+// }
 
-func CreatePost(c *gin.Context) {
+func CreatePictures(c *gin.Context) {
+	var picture Picture
 	jsonData := c.PostForm("json_data")
 	if err := json.Unmarshal([]byte(jsonData), &picture); err != nil {
 		c.JSON(400, gin.H{"message": "Invalid JSON data", "error": err.Error()})
@@ -68,7 +69,7 @@ func CreatePost(c *gin.Context) {
 		go func(files []*multipart.FileHeader) {
 			defer wg.Done()
 			for _, file := range files {
-				processFile(file, sess, errChan)
+				processFile(file, sess, errChan, picture)
 			}
 		}(fileHeader[i:end])
 	}
@@ -87,7 +88,7 @@ func CreatePost(c *gin.Context) {
 	c.JSON(200, gin.H{"message": "File processing completed"})
 }
 
-func processFile(file *multipart.FileHeader, sess *session.Session, errChan chan<- error) {
+func processFile(file *multipart.FileHeader, sess *session.Session, errChan chan<- error, pic Picture) {
 	src, err := file.Open()
 	if err != nil {
 		errChan <- err
@@ -126,18 +127,18 @@ func processFile(file *multipart.FileHeader, sess *session.Session, errChan chan
 							continue
 						}
 						defer zipFileReader.Close()
-						uploadToS3(zipFileReader, file.Name, sess, errChan)
+						uploadToS3(zipFileReader, file.Name, sess, errChan, pic)
 					}
 				}
 			}(zipReader.File[i:end])
 		}
 		wg2.Wait()
 	} else if isImageFile(file.Filename) {
-		uploadToS3(src, file.Filename, sess, errChan)
+		uploadToS3(src, file.Filename, sess, errChan, pic)
 	}
 }
 
-func uploadToS3(fileReader io.Reader, fileName string, sess *session.Session, errChan chan<- error) {
+func uploadToS3(fileReader io.Reader, fileName string, sess *session.Session, errChan chan<- error, pic Picture) {
 	uploader := s3manager.NewUploader(sess)
 	uuid := uuid.New()
 	fileExtension := getFileExtension(fileName)
@@ -155,10 +156,10 @@ func uploadToS3(fileReader io.Reader, fileName string, sess *session.Session, er
 	currentTime := time.Now()
 	imageURL := uploadOutput.Location
 
-	_, err2 := db.Exec("INSERT INTO Pictures (user_id, image_url, create_at, bookmark) VALUES (?, ?, ?, ?)",
-	picture.UserId, imageURL, currentTime, 0)
+	_, err2 := db.Exec("INSERT INTO Pictures (user_id, image_url, create_at, bookmarked) VALUES (?, ?, ?, ?)",
+	pic.UserID, imageURL, currentTime, 0)
 	if err2 != nil {
-		log.Printf("picture.UserId => %v", picture.UserId)   // userId 확인용 코드
+		log.Printf("picture.UserID => %v", pic.UserID)   // UserID 확인용 코드
 		// log.Printf("post.Content => %v", post.Content) // Content 확인용 코드
 		// c.JSON(500, gin.H{"message": fmt.Sprintf("Unable to save post data: %v", err)})
 		log.Println("Unable to save post data:", err2)
