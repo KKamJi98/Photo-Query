@@ -21,7 +21,7 @@ func ConnectDB() *sql.DB {
 	dbName := os.Getenv("DB_NAME")
 
 	// 데이터베이스 연결
-	db, err := sql.Open("mysql", fmt.Sprintf("%v:%v@tcp(%v:3306)/%v", dbUser, dbPassword, dbEndpoint, dbName))
+	db, err := sql.Open("mysql", fmt.Sprintf("%v:%v@tcp(%v:3306)/%v?parseTime=true", dbUser, dbPassword, dbEndpoint, dbName))
 	// fmt.Printf("%T\n", db) //sql.DB
 	if err != nil {
 		log.Fatal("Error connecting to database: ", err)
