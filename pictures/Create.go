@@ -144,7 +144,7 @@ func uploadToS3(fileReader io.Reader, fileName string, sess *session.Session, er
 	fileExtension := getFileExtension(fileName)
 	uploadOutput, err := uploader.Upload(&s3manager.UploadInput{
 		Bucket: aws.String(s3BucketName),
-		Key:    aws.String(fmt.Sprintf("%v%v", uuid.String(), fileExtension)),
+		Key:    aws.String(fmt.Sprintf("%v%v%v","original/" ,uuid.String(), fileExtension)),
 		Body:   fileReader,
 	})
 	if err != nil {
