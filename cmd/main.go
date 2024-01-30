@@ -12,6 +12,8 @@ func main() {
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
+	cwd, _ := os.Getwd()
+	log.Println("Current working directory:", cwd)
 
 	r := gin.Default()
 
