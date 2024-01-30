@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"os"
 	"mime/multipart"
 	"strings"
 	"sync"
@@ -37,7 +38,7 @@ func CreatePictures(c *gin.Context) {
 	fileHeader := form.File["images"]
 
 	sess, err := session.NewSession(&aws.Config{
-		Region: aws.String("ap-northeast-2"),
+		Region: aws.String("us-east-1"),
 	})
 	if err != nil {
 		c.JSON(500, gin.H{"message": "AWS session error"})
@@ -136,11 +137,13 @@ func processFile(file *multipart.FileHeader, sess *session.Session, errChan chan
 }
 
 func uploadToS3(fileReader io.Reader, fileName string, sess *session.Session, errChan chan<- error, pic Picture) {
+	s3BucketName := os.Getenv("BUCKET_NAME")
+
 	uploader := s3manager.NewUploader(sess)
 	uuid := uuid.New()
 	fileExtension := getFileExtension(fileName)
 	uploadOutput, err := uploader.Upload(&s3manager.UploadInput{
-		Bucket: aws.String("kkamji-image-upload-test"),
+		Bucket: aws.String(s3BucketName),
 		Key:    aws.String(fmt.Sprintf("%v%v", uuid.String(), fileExtension)),
 		Body:   fileReader,
 	})

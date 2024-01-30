@@ -3,9 +3,16 @@ package main
 import (
 	"ace-app/pictures" // picture 패키지 임포트
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
+	"log"
 )
 
 func main() {
+	err := godotenv.Load("./env/.env")
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+	
 	r := gin.Default()
 
 	// PostCreate API
