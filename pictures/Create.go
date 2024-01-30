@@ -54,7 +54,7 @@ func CreatePictures(c *gin.Context) {
 	if len(fileHeader) < 8 {
 		filesPerRoutine = len(fileHeader)
 	} else {
-		filesPerRoutine = len(fileHeader+7) / 8
+		filesPerRoutine = (len(fileHeader)+7) / 8
 	}
 
 	for i := 0; i < len(fileHeader); i += filesPerRoutine {
@@ -110,7 +110,7 @@ func processFile(file *multipart.FileHeader, sess *session.Session, errChan chan
 		if numOfFiles < 8 {
 			numOfFiles = len(zipReader.File)
 		} else {
-			numOfFiles = len(zipReader.File+7) / 8
+			numOfFiles = (len(zipReader.File)+7) / 8
 		}
 		var wg2 sync.WaitGroup
 		for i := 0; i < len(zipReader.File); i += numOfFiles {
