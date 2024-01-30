@@ -2,15 +2,11 @@ package picture
 
 import (
 	"ace-app/databases"
-	// "database/sql"
 	"encoding/json"
-	// "fmt"
 	"github.com/gin-gonic/gin"
-	// "github.com/joho/godotenv"
 	"log"
 	"net/http"
 	"fmt"
-	// "os"
 )
 
 func DeletePicturesByPostId(c *gin.Context) {

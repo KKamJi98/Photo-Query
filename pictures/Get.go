@@ -3,14 +3,10 @@ package picture
 import (
 	"database/sql"
 	"ace-app/databases"
-	// "fmt"
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
-	// "github.com/joho/godotenv"
 	"log"
 	"net/http"
-	// "os"
-	// "time"
 )
 
 type Picture struct {

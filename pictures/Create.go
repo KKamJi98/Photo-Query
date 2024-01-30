@@ -20,9 +20,6 @@ import (
 )
 
 var uploadFileCount int
-// type Picture struct {
-// 	UserID  int64  `json:"user_id"`
-// }
 
 func CreatePictures(c *gin.Context) {
 	var picture Picture
