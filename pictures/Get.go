@@ -1,8 +1,8 @@
 package picture
 
 import (
-	"database/sql"
 	"ace-app/databases"
+	"database/sql"
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 	"log"
@@ -10,18 +10,18 @@ import (
 )
 
 type Picture struct {
-	PictureID 	int64        `json:"picture_id"`
-	UserID    	int64        `json:"user_id"`
-	ImageURL  	string       `json:"image_url"`
-	CreatedAt 	sql.NullTime `json:"created_at"`
-	DeletedAt 	sql.NullTime `json:"deleted_at"`
-	Bookmarked 	int8		 `json:"bookmarked`
+	PictureID  int64        `json:"picture_id"`
+	UserID     int64        `json:"user_id"`
+	ImageURL   string       `json:"image_url"`
+	CreatedAt  sql.NullTime `json:"created_at"`
+	DeletedAt  sql.NullTime `json:"deleted_at"`
+	Bookmarked int8         `json:"bookmarked`
 }
 
 func GetPictures(c *gin.Context) {
 	db := database.ConnectDB()
 	defer db.Close()
-	
+
 	var pictures []Picture
 
 	rows, err := db.Query("SELECT picture_id, user_id, image_url, create_at, delete_at, bookmarked FROM Pictures")
@@ -85,14 +85,14 @@ func GetPictureByPictureId(c *gin.Context) {
 	// row, err := db.QueryRow("SELECT picture_id, user_id, image_url, create_at, delete_at, bookmarked FROM Pictures WHERE picture_id = ?", pictureId)
 	err := db.QueryRow("SELECT picture_id, user_id, image_url, create_at, delete_at, bookmarked FROM Pictures WHERE picture_id = ?", pictureId).Scan(&picture.PictureID, &picture.UserID, &picture.ImageURL, &picture.CreatedAt, &picture.DeletedAt, &picture.Bookmarked)
 	if err != nil {
-        if err == sql.ErrNoRows {
-            c.JSON(http.StatusNotFound, gin.H{"error": "No picture found with given ID"})
-            return
-        }
-        log.Printf("Error querying picture %v: %v", pictureId, err)
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Error querying picture"})
-        return
-    }
+		if err == sql.ErrNoRows {
+			c.JSON(http.StatusNotFound, gin.H{"error": "No picture found with given ID"})
+			return
+		}
+		log.Printf("Error querying picture %v: %v", pictureId, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error querying picture"})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"picture": picture,

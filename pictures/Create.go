@@ -4,20 +4,21 @@ import (
 	"ace-app/databases"
 	"archive/zip"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"io"
-	"log"
-	"os"
-	"mime/multipart"
-	"strings"
-	"sync"
-	"time"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/google/uuid"
+	"io"
+	"log"
+	"mime/multipart"
+	"os"
+	"strings"
+	"sync"
+	"time"
 )
 
 var uploadFileCount int
@@ -42,7 +43,7 @@ func CreatePictures(c *gin.Context) {
 		Region: aws.String("us-east-1"),
 	})
 	if err != nil {
-		c.JSON(500, gin.H{"message": "AWS session error"})
+		c.JSON(500, gin.H{"message": "AWS session error", "error": err.Error()})
 		return
 	}
 
@@ -90,6 +91,10 @@ func processFile(file *multipart.FileHeader, sess *session.Session, errChan chan
 	src, err := file.Open()
 	if err != nil {
 		errChan <- err
+		return
+	}
+	if src == nil {
+		errChan <- errors.New("file reader is nil")
 		return
 	}
 	defer src.Close()
@@ -144,7 +149,7 @@ func uploadToS3(fileReader io.Reader, fileName string, sess *session.Session, er
 	fileExtension := getFileExtension(fileName)
 	uploadOutput, err := uploader.Upload(&s3manager.UploadInput{
 		Bucket: aws.String(s3BucketName),
-		Key:    aws.String(fmt.Sprintf("%v%v%v","original/" ,uuid.String(), fileExtension)),
+		Key:    aws.String(fmt.Sprintf("%v%v%v", "original/", uuid.String(), fileExtension)),
 		Body:   fileReader,
 	})
 	if err != nil {
@@ -157,9 +162,9 @@ func uploadToS3(fileReader io.Reader, fileName string, sess *session.Session, er
 	imageURL := uploadOutput.Location
 
 	_, err2 := db.Exec("INSERT INTO Pictures (user_id, image_url, create_at, bookmarked) VALUES (?, ?, ?, ?)",
-	pic.UserID, imageURL, currentTime, 0)
+		pic.UserID, imageURL, currentTime, 0)
 	if err2 != nil {
-		log.Printf("picture.UserID => %v", pic.UserID)   // UserID 확인용 코드
+		log.Printf("picture.UserID => %v", pic.UserID) // UserID 확인용 코드
 		// log.Printf("post.Content => %v", post.Content) // Content 확인용 코드
 		// c.JSON(500, gin.H{"message": fmt.Sprintf("Unable to save post data: %v", err)})
 		log.Println("Unable to save post data:", err2)
