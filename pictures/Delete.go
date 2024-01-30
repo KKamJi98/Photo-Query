@@ -25,6 +25,8 @@ func DeletePicturesByPostId(c *gin.Context) {
 	db := database.ConnectDB()
 	defer db.Close()
 
+	// postId := c.Param("postId")
+
 	errorCount := 0
 	successCount := 0
 	nofoundCount := 0
