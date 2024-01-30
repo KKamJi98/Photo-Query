@@ -13,6 +13,7 @@ func main() {
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
+	log.Println(os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_ENDPOINT"), os.Getenv("DB_NAME"), os.Getenv("BUCKET_NAME"))
 	cwd, _ := os.Getwd()
 	log.Println("Current working directory:", cwd)
 
