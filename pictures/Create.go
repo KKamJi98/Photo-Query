@@ -23,6 +23,7 @@ import (
 var uploadFileCount int
 
 func CreatePictures(c *gin.Context) {
+	uploadFileCount = 0
 	var picture Picture
 	jsonData := c.PostForm("json_data")
 	if err := json.Unmarshal([]byte(jsonData), &picture); err != nil {
@@ -82,8 +83,7 @@ func CreatePictures(c *gin.Context) {
 	}
 
 	log.Println(uploadFileCount, " files upload Complete")
-	uploadFileCount = 0
-	c.JSON(200, gin.H{"message": "File processing completed"})
+	c.JSON(200, gin.H{"message": fmt.Sprintf("%v %v", uploadFileCount, "File processing completed")})
 }
 
 func processFile(file *multipart.FileHeader, sess *session.Session, errChan chan<- error, pic Picture) {
