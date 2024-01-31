@@ -169,7 +169,7 @@ func uploadToS3(fileReader io.Reader, fileName string, sess *session.Session, er
 
     uploader := s3manager.NewUploader(sess)
     uuid := uuid.New()
-	log.Printf("uuid=> %v session => %v", uuid.String(), sess)
+	log.Printf("uuid=> %v session => %v", uuid.String(), sess.Config.Credentials)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
     defer cancel()
