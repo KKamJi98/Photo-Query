@@ -135,9 +135,9 @@ func processFile(file *multipart.FileHeader, sess *session.Session, errChan chan
             if end > len(zipReader.File) {
                 end = len(zipReader.File)
             }
+			wg2.Add(1)
 			log.Printf("wg2 called\t Processing files %d to %d", i, end-1)
             go func(files []*zip.File) {
-				wg2.Add(1)
                 defer wg2.Done()
                 for _, file := range files {
                     if isImageFile(file.Name) {
@@ -168,6 +168,7 @@ func uploadToS3(fileReader io.Reader, fileName string, sess *session.Session, er
 
     uploader := s3manager.NewUploader(sess)
     uuid := uuid.New()
+	log.Printf("uuid=> %v", uuid.String())
     fileExtension := getFileExtension(fileName)
     uploadOutput, err := uploader.Upload(&s3manager.UploadInput{
         Bucket: aws.String(s3BucketName),
