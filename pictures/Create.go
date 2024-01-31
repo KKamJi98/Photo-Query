@@ -103,7 +103,7 @@ func CreatePictures(c *gin.Context) {
 		if err != nil {
 			log.Printf("Error in file processing: %v", err)
 			cancel()                                                     // 모든 고루틴 종료
-			c.JSON(http.StatusInternalServerError, gin.H{"error": 1000}) // 1000번 에러 코드 반환
+			c.JSON(http.StatusInternalServerError, gin.H{"error": 2000, "message": "Go Routine Error"}) // 2000번 에러 코드 반환
 			return
 		}
 	}
@@ -182,7 +182,7 @@ func uploadToS3(fileReader io.Reader, fileName string, sess *session.Session, er
 
 	uploader := s3manager.NewUploader(sess)
 	uuid := uuid.New()
-	log.Printf("uuid=> %v", uuid.String())
+	// log.Printf("uuid=> %v", uuid.String())
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
