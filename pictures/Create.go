@@ -103,7 +103,6 @@ func CreatePictures(c *gin.Context) {
 		if err != nil {
 			log.Printf("Error in file processing: %v", err)
 			cancel()                                                     // 모든 고루틴 종료
-			c.JSON(http.StatusInternalServerError, gin.H{"error": 2000, "message": "Go Routine Error"}) // 2000번 에러 코드 반환
 			return
 		}
 	}
