@@ -42,7 +42,7 @@ func CreatePictures(c *gin.Context) {
 	sess, err := session.NewSession(&aws.Config{
 		Region: aws.String("us-east-1"),
 	})
-	if err != nil {
+	if err != nil || sess == nil{
 		c.JSON(500, gin.H{"message": "AWS session error", "error": err.Error()})
 		return
 	}
