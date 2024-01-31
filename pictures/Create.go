@@ -79,7 +79,7 @@ func CreatePictures(c *gin.Context) {
         }
 
         wg.Add(1)
-        log.Printf("Processing files %d to %d", i, end-1)
+        log.Printf("wg1 called => Processing files %d to %d", i, end-1)
 
         go func(files []*multipart.FileHeader) {
             defer wg.Done()
@@ -136,6 +136,7 @@ func processFile(file *multipart.FileHeader, sess *session.Session, errChan chan
                 end = len(zipReader.File)
             }
             wg2.Add(1)
+			log.Printf("wg2 called\t Processing files %d to %d", i, end-1)
             go func(files []*zip.File) {
                 defer wg2.Done()
                 for _, file := range files {
