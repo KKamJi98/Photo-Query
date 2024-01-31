@@ -24,7 +24,7 @@ import (
 
 var uploadFileCount int
 
-// CreatePictures handles the uploaded image files and uploads them to AWS S3.
+// CreatePictures handles the uploaded image files and uploads them to AWS S3. 
 func CreatePictures(c *gin.Context) {
 	uploadFileCount = 0
 	var picture Picture
