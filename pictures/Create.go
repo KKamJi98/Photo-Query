@@ -57,7 +57,7 @@ func CreatePictures(c *gin.Context) {
         c.JSON(500, gin.H{"message": "AWS session error", "error": err.Error()})
         return
     }
-    log.Println("AWS session created successfully")
+    log.Println("AWS session created successfully\t", sess.Config.Credentials)
 
     var wg sync.WaitGroup
     errChan := make(chan error, len(fileHeader))
