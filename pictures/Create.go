@@ -55,7 +55,7 @@ func CreatePictures(c *gin.Context) {
 	})
 	if err != nil {
 		log.Printf("Error creating AWS session: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": 1000}) // 1000번 에러 코드 반환
+		c.JSON(http.StatusInternalServerError, gin.H{"error": 1000, "message": "aws session can not found"}) // 1000번 에러 코드 반환
 		return
 	}
 	log.Println("AWS session created successfully\t", sess.Config.Credentials)
