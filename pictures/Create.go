@@ -64,10 +64,10 @@ func CreatePictures(c *gin.Context) {
 
 	var filesPerRoutine int
 
-	if len(fileHeader) < 8 {
+	if len(fileHeader) < 64 {
 		filesPerRoutine = len(fileHeader)
 	} else {
-		filesPerRoutine = (len(fileHeader) + 7) / 8
+		filesPerRoutine = (len(fileHeader) + 63) / 64
 	}
 	log.Printf("Processing files in batches of %d", filesPerRoutine)
 
@@ -95,7 +95,7 @@ func CreatePictures(c *gin.Context) {
 		close(errChan)
 		log.Println("wg1 => All file processing routines have completed")
 	}()
-
+	
 	for err := range errChan {
 		if err != nil {
 			log.Printf("Error in file processing: %v", err)
@@ -130,10 +130,10 @@ func processFile(file *multipart.FileHeader, sess *session.Session, errChan chan
 			return
 		}
 		numOfFiles := len(zipReader.File)
-		if numOfFiles < 8 {
+		if numOfFiles < 64 {
 			numOfFiles = len(zipReader.File)
 		} else {
-			numOfFiles = (len(zipReader.File) + 7) / 8
+			numOfFiles = (len(zipReader.File) + 63) / 64
 		}
 		var wg2 sync.WaitGroup
 		for i := 0; i < len(zipReader.File); i += numOfFiles {
