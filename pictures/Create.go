@@ -175,6 +175,7 @@ func uploadToS3(fileReader io.Reader, fileName string, sess *session.Session, er
         Key:    aws.String(fmt.Sprintf("%v%v%v", "original/", uuid.String(), fileExtension)),
         Body:   fileReader,
     })
+	log.Printf("uploadOutput=> %v", uploadOutput)
     if err != nil {
         errChan <- err
         return
