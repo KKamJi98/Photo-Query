@@ -168,7 +168,7 @@ func uploadToS3(fileReader io.Reader, fileName string, sess *session.Session, er
 
     uploader := s3manager.NewUploader(sess)
     uuid := uuid.New()
-	log.Printf("uuid=> %v", uuid.String())
+	log.Printf("uuid=> %v session => %v", uuid.String(), sess)
     fileExtension := getFileExtension(fileName)
     uploadOutput, err := uploader.Upload(&s3manager.UploadInput{
         Bucket: aws.String(s3BucketName),
