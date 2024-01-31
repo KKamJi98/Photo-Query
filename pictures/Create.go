@@ -59,7 +59,6 @@ func CreatePictures(c *gin.Context) {
 	}
 	log.Println("AWS session created successfully\t", sess.Config.Credentials)
 
-	// Context 및 WaitGroup 설정
 	var wg sync.WaitGroup
 	errChan := make(chan error, len(fileHeader))
 
@@ -94,6 +93,7 @@ func CreatePictures(c *gin.Context) {
 	go func() {
 		wg.Wait()
 		close(errChan)
+		log.Println("wg1 => All file processing routines have completed")
 	}()
 
 	for err := range errChan {
@@ -155,6 +155,9 @@ func processFile(file *multipart.FileHeader, sess *session.Session, errChan chan
 						defer zipFileReader.Close()
 						uploadToS3(zipFileReader, file.Name, sess, errChan, pic)
 					}
+				}
+				if end == len(zipReader.File) {
+					log.Println("wg2 => Final batch of ZIP file processing routines have completed") // wg2가 마지막 배치에서 완료된 후 로그
 				}
 			}(zipReader.File[i:end])
 		}
