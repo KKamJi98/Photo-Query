@@ -83,7 +83,7 @@ func CreatePictures(c *gin.Context) {
 		}
 
 		wg.Add(1)
-		log.Printf("Processing files %d to %d", i, end-1)
+		log.Printf("wg Called Processing files %d to %d", i, end-1)
 
 		go func(files []*multipart.FileHeader) {
 			defer wg.Done()
