@@ -19,6 +19,7 @@ import (
     "strings"
     "sync"
     "time"
+	"context"
 )
 
 var uploadFileCount int
@@ -169,12 +170,28 @@ func uploadToS3(fileReader io.Reader, fileName string, sess *session.Session, er
     uploader := s3manager.NewUploader(sess)
     uuid := uuid.New()
 	log.Printf("uuid=> %v session => %v", uuid.String(), sess)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+    defer cancel()
     fileExtension := getFileExtension(fileName)
-    uploadOutput, err := uploader.Upload(&s3manager.UploadInput{
+
+    uploadOutput, err := uploader.UploadWithContext(ctx, &s3manager.UploadInput{
         Bucket: aws.String(s3BucketName),
         Key:    aws.String(fmt.Sprintf("%v%v%v", "original/", uuid.String(), fileExtension)),
         Body:   fileReader,
     })
+
+	if err != nil {
+        // 타임아웃 에러 확인
+        if err == context.DeadlineExceeded {
+            log.Printf("Upload timed out: %v", err)
+        } else {
+            log.Printf("Error in upload: %v", err)
+        }
+        errChan <- err
+        return
+    }
+	
 	log.Printf("uploadOutput=> %v", uploadOutput)
     if err != nil {
         errChan <- err
