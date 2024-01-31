@@ -184,7 +184,7 @@ func uploadToS3(fileReader io.Reader, fileName string, sess *session.Session, er
 	uuid := uuid.New()
 	// log.Printf("uuid=> %v", uuid.String())
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 	fileExtension := getFileExtension(fileName)
 
