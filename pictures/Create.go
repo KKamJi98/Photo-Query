@@ -3,7 +3,6 @@ package picture
 import (
 	"ace-app/databases"
 	"archive/zip"
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -55,19 +54,17 @@ func CreatePictures(c *gin.Context) {
 	})
 	if err != nil {
 		log.Printf("Error creating AWS session: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": 1000, "message": "aws session can not found", }) // 1000번 에러 코드 반환
+		c.JSON(http.StatusInternalServerError, gin.H{"error": 1000, "message": "aws session can not found"}) // 1000번 에러 코드 반환
 		return
 	}
 	log.Println("AWS session created successfully\t", sess.Config.Credentials)
 
 	// Context 및 WaitGroup 설정
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 	var wg sync.WaitGroup
 	errChan := make(chan error, len(fileHeader))
 
-	// Plans routines for file processing.
 	var filesPerRoutine int
+
 	if len(fileHeader) < 8 {
 		filesPerRoutine = len(fileHeader)
 	} else {
@@ -88,7 +85,7 @@ func CreatePictures(c *gin.Context) {
 		go func(files []*multipart.FileHeader) {
 			defer wg.Done()
 			for _, file := range files {
-				processFile(ctx, file, sess, errChan, picture)
+				processFile(file, sess, errChan, picture)
 			}
 		}(fileHeader[i:end])
 	}
@@ -102,7 +99,7 @@ func CreatePictures(c *gin.Context) {
 	for err := range errChan {
 		if err != nil {
 			log.Printf("Error in file processing: %v", err)
-			cancel()                                                     // 모든 고루틴 종료
+			c.JSON(http.StatusInternalServerError, gin.H{"error": 2000, "message": "Go Routine Error"}) // 2000번 에러 코드 반환
 			return
 		}
 	}
@@ -112,120 +109,107 @@ func CreatePictures(c *gin.Context) {
 }
 
 // processFile handles individual file processing and uploads to S3.
-func processFile(ctx context.Context, file *multipart.FileHeader, sess *session.Session, errChan chan<- error, pic Picture) {
-	select {
-	case <-ctx.Done(): // context가 취소되면 중단
+func processFile(file *multipart.FileHeader, sess *session.Session, errChan chan<- error, pic Picture) {
+
+	src, err := file.Open()
+	if err != nil {
+		errChan <- err
 		return
-	default:
-		src, err := file.Open()
+	}
+	if src == nil {
+		errChan <- errors.New("file reader is nil")
+		return
+	}
+	defer src.Close()
+
+	// Handles ZIP file processing.
+	if strings.HasSuffix(file.Filename, ".zip") {
+		zipReader, err := zip.NewReader(src, file.Size)
 		if err != nil {
 			errChan <- err
 			return
 		}
-		if src == nil {
-			errChan <- errors.New("file reader is nil")
-			return
+		numOfFiles := len(zipReader.File)
+		if numOfFiles < 8 {
+			numOfFiles = len(zipReader.File)
+		} else {
+			numOfFiles = (len(zipReader.File) + 7) / 8
 		}
-		defer src.Close()
-
-		// Handles ZIP file processing.
-		if strings.HasSuffix(file.Filename, ".zip") {
-			zipReader, err := zip.NewReader(src, file.Size)
-			if err != nil {
-				errChan <- err
-				return
+		var wg2 sync.WaitGroup
+		for i := 0; i < len(zipReader.File); i += numOfFiles {
+			end := i + numOfFiles
+			if end > len(zipReader.File) {
+				end = len(zipReader.File)
 			}
-			numOfFiles := len(zipReader.File)
-			if numOfFiles < 8 {
-				numOfFiles = len(zipReader.File)
-			} else {
-				numOfFiles = (len(zipReader.File) + 7) / 8
-			}
-			var wg2 sync.WaitGroup
-			for i := 0; i < len(zipReader.File); i += numOfFiles {
-				end := i + numOfFiles
-				if end > len(zipReader.File) {
-					end = len(zipReader.File)
-				}
-				wg2.Add(1)
-				log.Printf("wg2 called\t Processing files %d to %d", i, end-1)
-				go func(files []*zip.File) {
-					defer wg2.Done()
-					for _, file := range files {
-						if isImageFile(file.Name) {
-							zipFileReader, err := file.Open()
-							if err != nil {
-								errChan <- err
-								continue
-							}
-							defer zipFileReader.Close()
-							uploadToS3(zipFileReader, file.Name, sess, errChan, pic)
+			wg2.Add(1)
+			log.Printf("wg2 called\t Processing files %d to %d", i, end-1)
+			go func(files []*zip.File) {
+				defer wg2.Done()
+				for _, file := range files {
+					if isImageFile(file.Name) {
+						zipFileReader, err := file.Open()
+						if err != nil {
+							errChan <- err
+							continue
 						}
+						defer zipFileReader.Close()
+						uploadToS3(zipFileReader, file.Name, sess, errChan, pic)
 					}
-				}(zipReader.File[i:end])
-			}
-			wg2.Wait()
-		} else if isImageFile(file.Filename) {
-			uploadToS3(src, file.Filename, sess, errChan, pic)
+				}
+			}(zipReader.File[i:end])
 		}
+		wg2.Wait()
+	} else if isImageFile(file.Filename) {
+		uploadToS3(src, file.Filename, sess, errChan, pic)
 	}
 }
 
 // uploadToS3 uploads a file to AWS S3.
 func uploadToS3(fileReader io.Reader, fileName string, sess *session.Session, errChan chan<- error, pic Picture) {
-	if fileReader == nil {
-		errChan <- errors.New("fileReader is nil")
-		return
-	}
-	s3BucketName := os.Getenv("BUCKET_NAME")
+    if fileReader == nil {
+        errChan <- errors.New("fileReader is nil")
+        return
+    }
+    s3BucketName := os.Getenv("BUCKET_NAME")
 
-	uploader := s3manager.NewUploader(sess)
-	uuid := uuid.New()
-	// log.Printf("uuid=> %v", uuid.String())
+    uploader := s3manager.NewUploader(sess)
+    uuid := uuid.New()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
-	defer cancel()
-	fileExtension := getFileExtension(fileName)
+    fileExtension := getFileExtension(fileName)
 
-	uploadOutput, err := uploader.UploadWithContext(ctx, &s3manager.UploadInput{
-		Bucket: aws.String(s3BucketName),
-		Key:    aws.String(fmt.Sprintf("%v%v%v", "original/", uuid.String(), fileExtension)),
-		Body:   fileReader,
-	})
+    uploadOutput, err := uploader.Upload(&s3manager.UploadInput{
+        Bucket: aws.String(s3BucketName),
+        Key:    aws.String(fmt.Sprintf("%v%v%v", "original/", uuid.String(), fileExtension)),
+        Body:   fileReader,
+    })
 
-	if err != nil {
-		// 타임아웃 에러 확인
-		if err == context.DeadlineExceeded {
-			log.Printf("Upload timed out: %v", err)
-		} else {
-			log.Printf("Error in upload: %v", err)
-		}
-		errChan <- err
-		return
-	}
+    if err != nil {
+        log.Printf("Error in upload: %v", err)
+        errChan <- err
+        return
+    }
 
-	log.Printf("uploadOutput=> %v", uploadOutput)
-	if err != nil {
-		errChan <- err
-		return
-	}
+    if err != nil {
+        errChan <- err
+        return
+    }
 
-	// Connects to the database and saves image information.
-	db := database.ConnectDB()
-	defer db.Close()
-	currentTime := time.Now()
-	imageURL := uploadOutput.Location
+    db := database.ConnectDB()
+    defer db.Close()
+    currentTime := time.Now()
+    imageURL := uploadOutput.Location
 
-	_, err2 := db.Exec("INSERT INTO Pictures (user_id, image_url, create_at, bookmarked) VALUES (?, ?, ?, ?)",
-		pic.UserID, imageURL, currentTime, 0)
-	if err2 != nil {
-		errChan <- err2
-		return
-	}
+    _, err2 := db.Exec("INSERT INTO Pictures (user_id, image_url, create_at, bookmarked) VALUES (?, ?, ?, ?)",
+        pic.UserID, imageURL, currentTime, 0)
+    if err2 != nil {
+        errChan <- err2
+        return
+    }
 
-	log.Printf("file upload Complete")
-	uploadFileCount++
+    uploadFileCount++
+    log.Printf("%v file upload Complete", uploadFileCount)
 }
+
 
 // isImageFile checks if the file name indicates an image file.
 func isImageFile(fileName string) bool {
