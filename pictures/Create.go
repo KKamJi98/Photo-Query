@@ -24,7 +24,7 @@ import (
 
 var uploadFileCount int
 
-// CreatePictures handles the uploaded image files and uploads them to AWS S3. 
+// CreatePictures handles the uploaded image files and uploads them to AWS S3.
 func CreatePictures(c *gin.Context) {
 	uploadFileCount = 0
 	var picture Picture
@@ -64,10 +64,10 @@ func CreatePictures(c *gin.Context) {
 
 	var filesPerRoutine int
 
-	if len(fileHeader) < 64 {
+	if len(fileHeader) < 32 {
 		filesPerRoutine = len(fileHeader)
 	} else {
-		filesPerRoutine = (len(fileHeader) + 63) / 64
+		filesPerRoutine = (len(fileHeader) + 31) / 32
 	}
 	log.Printf("Processing files in batches of %d", filesPerRoutine)
 
@@ -95,7 +95,7 @@ func CreatePictures(c *gin.Context) {
 		close(errChan)
 		log.Println("wg1 => All file processing routines have completed")
 	}()
-	
+
 	for err := range errChan {
 		if err != nil {
 			log.Printf("Error in file processing: %v", err)
@@ -130,10 +130,10 @@ func processFile(file *multipart.FileHeader, sess *session.Session, errChan chan
 			return
 		}
 		numOfFiles := len(zipReader.File)
-		if numOfFiles < 64 {
+		if numOfFiles < 32 {
 			numOfFiles = len(zipReader.File)
 		} else {
-			numOfFiles = (len(zipReader.File) + 63) / 64
+			numOfFiles = (len(zipReader.File) + 31) / 32
 		}
 		var wg2 sync.WaitGroup
 		for i := 0; i < len(zipReader.File); i += numOfFiles {
@@ -169,67 +169,67 @@ func processFile(file *multipart.FileHeader, sess *session.Session, errChan chan
 
 // uploadToS3 uploads a file to AWS S3.
 func uploadToS3(fileReader io.Reader, fileName string, sess *session.Session, errChan chan<- error, pic Picture) {
-    if fileReader == nil {
-        errChan <- errors.New("fileReader is nil")
-        return
-    }
-    s3BucketName := os.Getenv("BUCKET_NAME")
+	if fileReader == nil {
+		errChan <- errors.New("fileReader is nil")
+		return
+	}
+	s3BucketName := os.Getenv("BUCKET_NAME")
 
-    uploader := s3manager.NewUploader(sess)
-    uuid := uuid.New()
+	uploader := s3manager.NewUploader(sess)
+	uuid := uuid.New()
 
-    fileExtension := getFileExtension(fileName)
+	fileExtension := getFileExtension(fileName)
 
-    uploadOutput, err := uploader.Upload(&s3manager.UploadInput{
-        Bucket: aws.String(s3BucketName),
-        Key:    aws.String(fmt.Sprintf("%v%v%v", "original/", uuid.String(), fileExtension)),
-        Body:   fileReader,
-    })
+	uploadOutput, err := uploader.Upload(&s3manager.UploadInput{
+		Bucket: aws.String(s3BucketName),
+		Key:    aws.String(fmt.Sprintf("%v%v%v", "original/", uuid.String(), fileExtension)),
+		Body:   fileReader,
+	})
 
-    if err != nil {
-        log.Printf("Error in upload: %v", err)
-        errChan <- err
-        return
-    }
+	if err != nil {
+		log.Printf("Error in upload: %v", err)
+		errChan <- err
+		return
+	}
 
-    if err != nil {
-        errChan <- err
-        return
-    }
+	if err != nil {
+		errChan <- err
+		return
+	}
 
-    db := database.ConnectDB()
-    defer db.Close()
-    currentTime := time.Now()
-    imageURL := uploadOutput.Location
+	db := database.ConnectDB()
+	defer db.Close()
+	currentTime := time.Now()
+	imageURL := uploadOutput.Location
 
-    _, err2 := db.Exec("INSERT INTO Pictures (user_id, image_url, create_at, bookmarked) VALUES (?, ?, ?, ?)",
-        pic.UserID, imageURL, currentTime, 0)
-    if err2 != nil {
-        errChan <- err2
-        return
-    }
+	_, err2 := db.Exec("INSERT INTO Pictures (user_id, image_url, create_at, bookmarked) VALUES (?, ?, ?, ?)",
+		pic.UserID, imageURL, currentTime, 0)
+	if err2 != nil {
+		errChan <- err2
+		return
+	}
 
-    uploadFileCount++
-    log.Printf("%v file upload Complete", uploadFileCount)
+	uploadFileCount++
+	log.Printf("%v file upload Complete", uploadFileCount)
 }
 
 // isImageFile checks if the file name indicates an image file.
 func isImageFile(fileName string) bool {
-    // 지원하는 이미지 파일 확장자 추가
-    validExtensions := []string{".png", ".jpg", ".jpeg", ".gif", ".bmp"}
-    for _, ext := range validExtensions {
-        if strings.HasSuffix(strings.ToLower(fileName), ext) {
-            return true
-        }
-    }
-    return false
+	// 지원하는 이미지 파일 확장자 추가
+	validExtensions := []string{".png", ".jpg", ".jpeg", ".gif", ".bmp"}
+	for _, ext := range validExtensions {
+		if strings.HasSuffix(strings.ToLower(fileName), ext) {
+			return true
+		}
+	}
+	return false
 }
 
 // getFileExtension extracts the file extension from the file name.
 func getFileExtension(fileName string) string {
-    // 마지막으로 나타나는 '.'의 위치를 찾아 확장자 반환
-    if dotIndex := strings.LastIndex(fileName, "."); dotIndex != -1 {
-        return fileName[dotIndex:]
-    }
-    return "" // 확장자가 없는 경우
+	// 마지막으로 나타나는 '.'의 위치를 찾아 확장자 반환
+	if dotIndex := strings.LastIndex(fileName, "."); dotIndex != -1 {
+		return fileName[dotIndex:]
+	}
+	return "" // 확장자가 없는 경우
 }
