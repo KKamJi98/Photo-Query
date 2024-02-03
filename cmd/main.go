@@ -4,6 +4,7 @@ import (
 	"ace-app/pictures"         // picture 패키지를 임포트합니다. 이는 사진 관련 API를 처리합니다.
 	"github.com/gin-gonic/gin" // Gin 웹 프레임워크를 사용합니다.
 	"github.com/joho/godotenv" // 환경 변수를 .env 파일에서 로드하기 위해 사용합니다.
+	"github.com/gin-contrib/cors"
 	"log"
 	"os"
 )
@@ -19,7 +20,8 @@ func main() {
 
 	// gin 라우터 인스턴스 생성
 	r := gin.Default()
-
+	r.Use(cors.Default())
+	
 	// RESTful API endpoint 생성
 	r.POST("/pictures", picture.CreatePictures)                    // 사진 생성 API
 	r.GET("/pictures", picture.GetPictures)                        // 모든 사진 조회 API
