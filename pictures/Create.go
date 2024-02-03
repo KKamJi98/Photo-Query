@@ -23,10 +23,13 @@ import (
 )
 
 var uploadFileCount int
+var urls []string
 
 // CreatePictures handles the uploaded image files and uploads them to AWS S3.
 func CreatePictures(c *gin.Context) {
 	uploadFileCount = 0
+	urls = []string{}
+
 	var picture Picture
 	jsonData := c.PostForm("json_data")
 
@@ -58,19 +61,19 @@ func CreatePictures(c *gin.Context) {
 		return
 	}
 	log.Println("AWS session created successfully\t", sess.Config.Credentials)
-
+	
 	var wg sync.WaitGroup
 	errChan := make(chan error, len(fileHeader))
-
+	
 	var filesPerRoutine int
-
+	
 	if len(fileHeader) < 32 {
 		filesPerRoutine = len(fileHeader)
-	} else {
-		filesPerRoutine = (len(fileHeader) + 31) / 32
-	}
-	log.Printf("Processing files in batches of %d", filesPerRoutine)
-
+		} else {
+			filesPerRoutine = (len(fileHeader) + 31) / 32
+		}
+		log.Printf("Processing files in batches of %d", filesPerRoutine)
+		
 	// Performs parallel processing for each file.
 	for i := 0; i < len(fileHeader); i += filesPerRoutine {
 		end := i + filesPerRoutine
@@ -105,7 +108,8 @@ func CreatePictures(c *gin.Context) {
 	}
 
 	log.Printf("%d files uploaded successfully", uploadFileCount)
-	c.JSON(200, gin.H{"message": fmt.Sprintf("%v files processing completed", uploadFileCount)})
+	// c.JSON(200, gin.H{"message": fmt.Sprintf("%v files processing completed", uploadFileCount)})
+	GetPicturesByUrls(c, urls)
 }
 
 // processFile handles individual file processing and uploads to S3.
@@ -201,6 +205,7 @@ func uploadToS3(fileReader io.Reader, fileName string, sess *session.Session, er
 	defer db.Close()
 	currentTime := time.Now()
 	imageURL := uploadOutput.Location
+	urls = append(urls, imageURL)
 
 	_, err2 := db.Exec("INSERT INTO Pictures (user_id, image_url, create_at, bookmarked) VALUES (?, ?, ?, ?)",
 		pic.UserID, imageURL, currentTime, 0)
@@ -232,4 +237,43 @@ func getFileExtension(fileName string) string {
 		return fileName[dotIndex:]
 	}
 	return "" // 확장자가 없는 경우
+}
+
+// 파일 업로드 후 URL을 저장한 슬라이스를 기반으로 Picture 정보를 검색하고 반환하는 함수
+func GetPicturesByUrls(c *gin.Context, urls []string) {
+	db := database.ConnectDB()
+	defer db.Close()
+
+	var pictures []Picture
+
+	// 동적으로 IN 절 쿼리 생성
+	placeholders := make([]string, len(urls))
+	args := make([]interface{}, len(urls))
+	for i, url := range urls {
+		placeholders[i] = "?"
+		args[i] = url
+	}
+	query := fmt.Sprintf("SELECT picture_id, user_id, image_url, create_at, delete_at, bookmarked FROM Pictures WHERE image_url IN (%s)", strings.Join(placeholders, ","))
+
+	// 쿼리 실행
+	rows, err := db.Query(query, args...)
+	if err != nil {
+		log.Printf("Error querying pictures by URLs: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error querying pictures"})
+		return
+	}
+	defer rows.Close()
+
+	// 결과 스캔
+	for rows.Next() {
+		var picture Picture
+		if err := rows.Scan(&picture.PictureID, &picture.UserID, &picture.ImageURL, &picture.CreatedAt, &picture.DeletedAt, &picture.Bookmarked); err != nil {
+			log.Printf("Error scanning picture: %v", err)
+			continue
+		}
+		pictures = append(pictures, picture)
+	}
+
+	// 클라이언트에게 JSON 형식으로 결과 반환
+	c.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("%d files uploaded successfully", uploadFileCount) ,"pictures": pictures})
 }
