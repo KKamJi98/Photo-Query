@@ -42,7 +42,7 @@ pipeline {
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY', credentialsId: ECR_CREDENTIAL]]) {
                     script {
                         def ecrLogin = sh(script: "aws ecr get-login-password --region us-east-1", returnStdout: true).trim()
-                        sh "docker login -u AWS -p ${ecrLogin} ${ECR_REPO_URL}"
+                        sh "docker login -u AWS -p ${ecrLogin} ${ECR_URL}"
                     }
                 }
                 // docker image ECR로 Push
