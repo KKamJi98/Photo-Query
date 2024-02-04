@@ -1,5 +1,5 @@
 FROM golang:1.21.6-alpine
-COPY ACE-Team-KKamJi /app
+COPY ./* /app
 WORKDIR /app
 RUN mkdir env && \
     echo DB_USER=admin >> env/.env && \
