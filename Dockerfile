@@ -1,5 +1,5 @@
 FROM golang:1.21.6-alpine
-COPY ./* /picture-backend
+COPY . /picture-backend
 WORKDIR /picture-backend
 RUN set -x && \
     mkdir env && \
