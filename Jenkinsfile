@@ -46,8 +46,8 @@ pipeline {
                     }
                 }
                 // docker image ECR로 Push
-                sh "docker push -t ${ECR_URL}:${currentBuild.number} ."
-                sh "docker build -t ${ECR_URL}:latest ."
+                sh "docker push ${ECR_URL}:${currentBuild.number} ."
+                sh "docker push ${ECR_URL}:latest ."
             }
 
             post {
