@@ -30,7 +30,7 @@ pipeline {
                 }
             }
         }
-        #docker image build
+        //docker image build
         stage('image build') {
             steps {
                 sh "docker build -t ${ECR_URL}:${currentBuild.number} ."
