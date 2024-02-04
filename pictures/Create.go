@@ -108,8 +108,11 @@ func CreatePictures(c *gin.Context) {
 	}
 
 	log.Printf("%d files uploaded successfully", uploadFileCount)
-	// c.JSON(200, gin.H{"message": fmt.Sprintf("%v files processing completed", uploadFileCount)})
-	GetPicturesByUrls(c, urls)
+	if uploadFileCount == 0 {
+		c.JSON(200, gin.H{"message": fmt.Sprintf("%v files processing completed", uploadFileCount)})
+	} else {
+		GetPicturesByUrls(c, urls)
+	}
 }
 
 // processFile handles individual file processing and uploads to S3.
