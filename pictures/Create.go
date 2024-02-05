@@ -187,7 +187,13 @@ func uploadToS3(fileReader io.Reader, fileName string, sess *session.Session, er
 
 	fileExtension := getFileExtension(fileName)
 
-	uploadOutput, err := uploader.Upload(&s3manager.UploadInput{
+	// uploadOutput, err := uploader.Upload(&s3manager.UploadInput{
+	// 	Bucket: aws.String(s3BucketName),
+	// 	Key:    aws.String(fmt.Sprintf("%v%v%v", "original/", uuid.String(), fileExtension)),
+	// 	Body:   fileReader,
+	// })
+
+	_, err := uploader.Upload(&s3manager.UploadInput{
 		Bucket: aws.String(s3BucketName),
 		Key:    aws.String(fmt.Sprintf("%v%v%v", "original/", uuid.String(), fileExtension)),
 		Body:   fileReader,
@@ -207,7 +213,8 @@ func uploadToS3(fileReader io.Reader, fileName string, sess *session.Session, er
 	db := database.ConnectDB()
 	defer db.Close()
 	currentTime := time.Now()
-	imageURL := uploadOutput.Location
+	imageURL := uuid.String() + fileExtension
+	// imageURL := uploadOutput.Location
 	urls = append(urls, imageURL)
 
 	_, err2 := db.Exec("INSERT INTO Pictures (user_id, image_url, create_at, bookmarked) VALUES (?, ?, ?, ?)",
