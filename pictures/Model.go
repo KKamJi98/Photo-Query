@@ -2,8 +2,8 @@ package picture
 
 import(	
 	"database/sql"
-	"time"
-	"encoding/json"
+	// "time"
+	// "encoding/json"
 )
 
 // Picture struct represents the structure of a picture record.
@@ -11,14 +11,14 @@ type Picture struct {
 	PictureID  int64        `json:"picture_id"`
 	UserID     int64        `json:"user_id"`
 	ImageURL   string       `json:"image_url"`
-	CreatedAt  CustomTime	`json:"created_at,omitempty"`
-	DeletedAt  CustomTime	`json:"deleted_at,omitempty"`
+	CreatedAt  sql.NullTime	`json:"created_at,omitempty"`
+	DeletedAt  sql.NullTime	`json:"deleted_at,omitempty"`
 	Bookmarked int8         `json:"bookmarked"`
 }
 
-type CustomTime struct {
-	sql.NullTime
-}
+// type CustomTime struct {
+// 	sql.NullTime
+// }
 
 // MarshalJSON is a custom marshaller that omits the Valid field and formats the Time.
 // func (ct *CustomTime) MarshalJSON() ([]byte, error) {
