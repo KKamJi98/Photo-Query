@@ -25,7 +25,7 @@ import (
 var uploadFileCount int
 var urls []string
 
-// CreatePictures handles the uploaded image files and uploads them to AWS S3.
+// CreatePictures는 업로드된 이미지 파일을 처리하고 AWS S3에 업로드합니다.
 func CreatePictures(c *gin.Context) {
 	uploadFileCount = 0
 	urls = []string{}
@@ -33,34 +33,34 @@ func CreatePictures(c *gin.Context) {
 	var picture Picture
 	jsonData := c.PostForm("json_data")
 
-	// Unmarshals the JSON data into the Picture struct.
+	// JSON 데이터를 Picture 구조체로 언마샬합니다.
 	if err := json.Unmarshal([]byte(jsonData), &picture); err != nil {
-		log.Printf("Error unmarshaling JSON data: %v", err)
-		c.JSON(400, gin.H{"message": "Invalid JSON data", "error": err.Error()})
+		log.Printf("JSON 데이터 언마샬 오류: %v", err)
+		c.JSON(400, gin.H{"message": "잘못된 JSON 데이터", "error": err.Error()})
 		return
 	}
-	log.Println("JSON data unmarshaled successfully")
+	log.Println("JSON 데이터 언마샬 성공")
 
-	// Receives multipart form data.
+	// 멀티파트 폼 데이터를 수신합니다.
 	form, err := c.MultipartForm()
 	if err != nil {
-		log.Printf("Error receiving multipart form data: %v", err)
-		c.JSON(500, gin.H{"message": "File receive error"})
+		log.Printf("멀티파트 폼 데이터 수신 오류: %v", err)
+		c.JSON(500, gin.H{"message": "파일 수신 오류"})
 		return
 	}
-	log.Println("Multipart form data received")
+	log.Println("멀티파트 폼 데이터 수신 완료")
 	fileHeader := form.File["images"]
 
-	// Creates an AWS session.
+	// AWS 세션을 생성합니다.
 	sess, err := session.NewSession(&aws.Config{
 		Region: aws.String("us-east-1"),
 	})
 	if err != nil {
-		log.Printf("Error creating AWS session: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": 1000, "message": "aws session can not found"}) // 1000번 에러 코드 반환
+		log.Printf("AWS 세션 생성 오류: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": 1000, "message": "aws 세션을 찾을 수 없음"}) // 1000번 에러 코드 반환
 		return
 	}
-	log.Println("AWS session created successfully\t", sess.Config.Credentials)
+	log.Println("AWS 세션 생성 성공\t", sess.Config.Credentials)
 	
 	var wg sync.WaitGroup
 	errChan := make(chan error, len(fileHeader))
@@ -69,12 +69,12 @@ func CreatePictures(c *gin.Context) {
 	
 	if len(fileHeader) < 32 {
 		filesPerRoutine = len(fileHeader)
-		} else {
-			filesPerRoutine = (len(fileHeader) + 31) / 32
-		}
-		log.Printf("Processing files in batches of %d", filesPerRoutine)
+	} else {
+		filesPerRoutine = (len(fileHeader) + 31) / 32
+	}
+	log.Printf("파일 일괄 처리 크기: %d", filesPerRoutine)
 		
-	// Performs parallel processing for each file.
+	// 각 파일에 대한 병렬 처리를 수행합니다.
 	for i := 0; i < len(fileHeader); i += filesPerRoutine {
 		end := i + filesPerRoutine
 		if end > len(fileHeader) {
@@ -82,7 +82,7 @@ func CreatePictures(c *gin.Context) {
 		}
 
 		wg.Add(1)
-		log.Printf("wg Called Processing files %d to %d", i, end-1)
+		log.Printf("wg 호출\t 파일 처리 중 %d부터 %d까지", i, end-1)
 
 		go func(files []*multipart.FileHeader) {
 			defer wg.Done()
@@ -96,26 +96,26 @@ func CreatePictures(c *gin.Context) {
 	go func() {
 		wg.Wait()
 		close(errChan)
-		log.Println("wg1 => All file processing routines have completed")
+		log.Println("wg1 => 모든 파일 처리 루틴 완료")
 	}()
 
 	for err := range errChan {
 		if err != nil {
-			log.Printf("Error in file processing: %v", err)
+			log.Printf("파일 처리 오류: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": 2000, "message": fmt.Sprintf("%v", err)}) // 2000번 에러 코드 반환
 			return
 		}
 	}
 
-	log.Printf("%d files uploaded successfully", uploadFileCount)
+	log.Printf("%d개 파일 업로드 성공", uploadFileCount)
 	if uploadFileCount == 0 {
-		c.JSON(200, gin.H{"message": fmt.Sprintf("%v files processing completed", uploadFileCount)})
+		c.JSON(200, gin.H{"message": fmt.Sprintf("%v개 파일 처리 완료", uploadFileCount)})
 	} else {
 		GetPicturesByUrls(c, urls)
 	}
 }
 
-// processFile handles individual file processing and uploads to S3.
+// processFile는 개별 파일 처리 및 S3에 업로드합니다.
 func processFile(file *multipart.FileHeader, sess *session.Session, errChan chan<- error, pic Picture) {
 
 	src, err := file.Open()
@@ -124,12 +124,12 @@ func processFile(file *multipart.FileHeader, sess *session.Session, errChan chan
 		return
 	}
 	if src == nil {
-		errChan <- errors.New("file reader is nil")
+		errChan <- errors.New("파일 리더가 nil입니다")
 		return
 	}
 	defer src.Close()
 
-	// Handles ZIP file processing.
+	// ZIP 파일 처리
 	if strings.HasSuffix(file.Filename, ".zip") {
 		zipReader, err := zip.NewReader(src, file.Size)
 		if err != nil {
@@ -149,7 +149,7 @@ func processFile(file *multipart.FileHeader, sess *session.Session, errChan chan
 				end = len(zipReader.File)
 			}
 			wg2.Add(1)
-			log.Printf("wg2 called\t Processing files %d to %d", i, end-1)
+			log.Printf("wg2 호출\t 파일 처리 중 %d부터 %d까지", i, end-1)
 			go func(files []*zip.File) {
 				defer wg2.Done()
 				for _, file := range files {
@@ -164,7 +164,7 @@ func processFile(file *multipart.FileHeader, sess *session.Session, errChan chan
 					}
 				}
 				if end == len(zipReader.File) {
-					log.Println("wg2 => Final batch of ZIP file processing routines have completed") // wg2가 마지막 배치에서 완료된 후 로그
+					log.Println("wg2 => ZIP 파일 처리 루틴의 마지막 배치 완료") // wg2가 마지막 배치에서 완료된 후 로그
 				}
 			}(zipReader.File[i:end])
 		}
@@ -174,10 +174,10 @@ func processFile(file *multipart.FileHeader, sess *session.Session, errChan chan
 	}
 }
 
-// uploadToS3 uploads a file to AWS S3.
+// uploadToS3 함수는 파일을 AWS S3에 업로드합니다.
 func uploadToS3(fileReader io.Reader, fileName string, sess *session.Session, errChan chan<- error, pic Picture) {
 	if fileReader == nil {
-		errChan <- errors.New("fileReader is nil")
+		errChan <- errors.New("fileReader가 nil입니다")
 		return
 	}
 	s3BucketName := os.Getenv("BUCKET_NAME")
@@ -200,7 +200,7 @@ func uploadToS3(fileReader io.Reader, fileName string, sess *session.Session, er
 	})
 
 	if err != nil {
-		log.Printf("Error in upload: %v", err)
+		log.Printf("업로드 중 오류 발생: %v", err)
 		errChan <- err
 		return
 	}
@@ -225,12 +225,12 @@ func uploadToS3(fileReader io.Reader, fileName string, sess *session.Session, er
 	}
 
 	uploadFileCount++
-	log.Printf("%v file upload Complete", uploadFileCount)
+	log.Printf("%v 파일 업로드 완료", uploadFileCount)
 }
 
-// isImageFile checks if the file name indicates an image file.
+// isImageFile 함수는 파일 이름이 이미지 파일을 나타내는지 확인합니다.
 func isImageFile(fileName string) bool {
-	// 지원하는 이미지 파일 확장자 추가
+	// 지원하는 이미지 파일 확장자를 추가합니다.
 	validExtensions := []string{".png", ".jpg", ".jpeg", ".gif", ".bmp"}
 	for _, ext := range validExtensions {
 		if strings.HasSuffix(strings.ToLower(fileName), ext) {
@@ -240,23 +240,23 @@ func isImageFile(fileName string) bool {
 	return false
 }
 
-// getFileExtension extracts the file extension from the file name.
+// getFileExtension 함수는 파일 이름에서 확장자를 추출합니다.
 func getFileExtension(fileName string) string {
-	// 마지막으로 나타나는 '.'의 위치를 찾아 확장자 반환
+	// 파일 이름에서 마지막으로 나타나는 '.'의 위치를 찾아 확장자를 반환합니다.
 	if dotIndex := strings.LastIndex(fileName, "."); dotIndex != -1 {
 		return fileName[dotIndex:]
 	}
 	return "" // 확장자가 없는 경우
 }
 
-// 파일 업로드 후 URL을 저장한 슬라이스를 기반으로 Picture 정보를 검색하고 반환하는 함수
+// GetPicturesByUrls 함수는 URL을 기반으로 Picture 정보를 검색하고 반환합니다.
 func GetPicturesByUrls(c *gin.Context, urls []string) {
 	db := database.ConnectDB()
 	defer db.Close()
 
 	var pictures []Picture
 
-	// 동적으로 IN 절 쿼리 생성
+	// 동적으로 IN 절 쿼리를 생성합니다.
 	placeholders := make([]string, len(urls))
 	args := make([]interface{}, len(urls))
 	for i, url := range urls {
@@ -265,25 +265,25 @@ func GetPicturesByUrls(c *gin.Context, urls []string) {
 	}
 	query := fmt.Sprintf("SELECT picture_id, user_id, image_url, create_at, delete_at, bookmarked FROM Pictures WHERE image_url IN (%s)", strings.Join(placeholders, ","))
 
-	// 쿼리 실행
+	// 쿼리를 실행합니다.
 	rows, err := db.Query(query, args...)
 	if err != nil {
-		log.Printf("Error querying pictures by URLs: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error querying pictures"})
+		log.Printf("URL을 기반으로 사진을 쿼리하는 중 오류 발생: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "사진 쿼리 오류"})
 		return
 	}
 	defer rows.Close()
 
-	// 결과 스캔
+	// 결과를 스캔합니다.
 	for rows.Next() {
 		var picture Picture
 		if err := rows.Scan(&picture.PictureID, &picture.UserID, &picture.ImageURL, &picture.CreatedAt, &picture.DeletedAt, &picture.Bookmarked); err != nil {
-			log.Printf("Error scanning picture: %v", err)
+			log.Printf("사진 스캔 중 오류 발생: %v", err)
 			continue
 		}
 		pictures = append(pictures, picture)
 	}
 
-	// 클라이언트에게 JSON 형식으로 결과 반환
-	c.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("%d files uploaded successfully", uploadFileCount) ,"pictures": pictures})
+	// 클라이언트에게 JSON 형식으로 결과를 반환합니다.
+	c.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("%v 파일 업로드 성공", uploadFileCount) ,"pictures": pictures})
 }

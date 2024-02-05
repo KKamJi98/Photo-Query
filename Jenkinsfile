@@ -19,6 +19,9 @@ pipeline {
     stages {
         stage('Checkout Github') {
             steps {
+                slackSend (channel: '#jenkins', color: '#FFFF00', message:
+                "STARTED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
+
                 checkout([$class: 'GitSCM', branches: [[name: '*/main']], extensions: [],
                 userRemoteConfigs: [[credentialsId: GITCREDENTIAL, url: GITWEBADD]]])
             }
@@ -83,9 +86,11 @@ pipeline {
             post {
                 failure {
                     echo 'k8s manifest file update failure'
+                    slackSend (channel: '#jenkins-checkout', color: '#FF0000', message: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' has failed. Check the Jenkins logs for details. (${env.BUILD_URL})")
                 }
                 success {
                     echo 'k8s manifest file update success'
+                    slackSend (channel: '#jenkins-checkout', color: '#00FF00', message: "COMPLETED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' was successful. (${env.BUILD_URL})")
                 }
             }
         }
