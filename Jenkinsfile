@@ -52,7 +52,7 @@ pipeline {
             }
             post {
                 failure {
-                    echo 'AWS ECR로 이미지 푸시 실패'
+                    echo 'AWS ECR로 이미지 푸시 실패 '
                     sh "docker image rm -f ${ECR_URL}:${currentBuild.number}"
                     sh "docker image rm -f ${ECR_URL}:latest"
                 }
