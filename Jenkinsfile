@@ -86,11 +86,11 @@ pipeline {
             post {
                 failure {
                     echo 'k8s manifest file update failure'
-                    slackSend (channel: '#jenkins-checkout', color: '#FF0000', message: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' has failed. Check the Jenkins logs for details. (${env.BUILD_URL})")
+                    slackSend (channel: '#jenkins', color: '#FF0000', message: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' has failed. Check the Jenkins logs for details. (${env.BUILD_URL})")
                 }
                 success {
                     echo 'k8s manifest file update success'
-                    slackSend (channel: '#jenkins-checkout', color: '#00FF00', message: "COMPLETED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' was successful. (${env.BUILD_URL})")
+                    slackSend (channel: '#jenkins', color: '#00FF00', message: "COMPLETED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' was successful. (${env.BUILD_URL})")
                 }
             }
         }
