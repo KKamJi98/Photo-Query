@@ -102,7 +102,7 @@ func CreatePictures(c *gin.Context) {
 	for err := range errChan {
 		if err != nil {
 			log.Printf("Error in file processing: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": 2000, "message": "Go Routine Error"}) // 2000번 에러 코드 반환
+			c.JSON(http.StatusInternalServerError, gin.H{"error": 2000, "message": fmt.Sprintf("%v", err)}) // 2000번 에러 코드 반환
 			return
 		}
 	}

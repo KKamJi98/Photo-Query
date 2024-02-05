@@ -20,7 +20,14 @@ func main() {
 
 	// gin 라우터 인스턴스 생성
 	r := gin.Default()
-	r.Use(cors.Default())
+	
+	config := cors.Config{
+		AllowAllOrigins: true,
+		AllowMethods:    []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:    []string{"Origin", "Content-Length", "Content-Type"},
+	}
+	r.Use(cors.New(config))
+	
 	
 	// RESTful API endpoint 생성
 	r.POST("/pictures", picture.CreatePictures)                    // 사진 생성 API
