@@ -57,7 +57,7 @@ pipeline {
                     sh "docker image rm -f ${ECR_URL}:latest"
                 }
                 success {
-                    echo 'AWS ECR로 이미지 푸시 성공'
+                    echo 'AWS ECR로 이미지 푸시 성공 '
                     sh "docker image rm -f ${ECR_URL}:${currentBuild.number}"
                     sh "docker image rm -f ${ECR_URL}:latest"
                 }
