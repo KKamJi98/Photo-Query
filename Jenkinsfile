@@ -72,7 +72,7 @@ pipeline {
 
                 sh "git config --global user.email ${GITMAIL}"
                 sh "git config --global user.name ${GITNAME}"
-                sh "sed -i 's@${ECR_URL}:.*@${ECR_URL}:${currentBuild.number}@g' ingress/app_group/picture_backend/picture_backend_deployment.yml"
+                sh "sed -i 's@${ECR_URL}:.*@${ECR_URL}:${currentBuild.number}@g' ingress/app_group/picture_backend/picture_backend_deployment.yaml"
                 sh "git add ."
                 sh "git commit -m 'fix:${ECR_URL} ${currentBuild.number} image versioning'"
                 sh "git branch -M main"
