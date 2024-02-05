@@ -9,7 +9,7 @@ pipeline {
         GITNAME = 'war-oxi'
         GITMAIL = 'xowl5460@naver.com'
         GITWEBADD = 'https://github.com/War-Oxi/ACE-Team-KKamJi.git'
-        GITSSHADD = 'git@github.com:War-Oxi/ACE-Team-KKamJi.git'
+        GITSSHADD = 'git@github.com:hjk1996/aws-app-eks-manifests.git'
         GITCREDENTIAL = 'kkam_git_cre'
 
         ECR_URL = '109412806537.dkr.ecr.us-east-1.amazonaws.com/app-picture-backend'
