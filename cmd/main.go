@@ -24,7 +24,7 @@ func main() {
 	config := cors.Config{
 		AllowAllOrigins: true,
 		AllowMethods:    []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowHeaders:    []string{"Origin", "Content-Length", "Content-Type"},
+		AllowHeaders:    []string{"*"},
 	}
 	r.Use(cors.New(config))
 	
