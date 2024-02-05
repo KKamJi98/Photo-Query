@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	// .env 파일에서 환경 변수 로드
+	// .env 파일에서 환경 변수 로드 
 	err := godotenv.Load("./env/.env")
 	if err != nil {
 		log.Fatal("Error loading .env file") // .env 파일 로드 실패 => 로그 출력 && 종료
