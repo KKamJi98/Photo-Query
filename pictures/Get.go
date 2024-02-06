@@ -16,7 +16,7 @@ func GetPictures(c *gin.Context) {
     var pictures []Picture
 
     // 데이터베이스에서 모든 사진을 조회합니다.
-    rows, err := db.Query("SELECT picture_id, user_id, image_url, create_at, delete_at, bookmarked FROM Pictures")
+    rows, err := db.Query("SELECT picture_id, user_id, image_url, create_at, bookmarked FROM Pictures")
     if err != nil {
         log.Printf("사진 조회 오류: %v", err)
         c.JSON(http.StatusInternalServerError, gin.H{"error": "사진 조회 오류"})
@@ -27,7 +27,7 @@ func GetPictures(c *gin.Context) {
     // 각 행을 Picture 구조체로 스캔합니다.
     for rows.Next() {
         var picture Picture
-        if err := rows.Scan(&picture.PictureID, &picture.UserID, &picture.ImageURL, &picture.CreatedAt, &picture.DeletedAt, &picture.Bookmarked); err != nil {
+        if err := rows.Scan(&picture.PictureID, &picture.UserID, &picture.ImageURL, &picture.CreatedAt, &picture.Bookmarked); err != nil {
             log.Printf("사진 스캔 오류: %v", err)
             continue
         }
@@ -46,7 +46,7 @@ func GetPicturesByUserId(c *gin.Context) {
     userId := c.Param("user_id")
 
     // 사용자 ID별로 사진을 조회합니다.
-    rows, err := db.Query("SELECT picture_id, user_id, image_url, create_at, delete_at, bookmarked FROM Pictures WHERE user_id = ?", userId)
+    rows, err := db.Query("SELECT picture_id, user_id, image_url, create_at, bookmarked FROM Pictures WHERE user_id = ?", userId)
     if err != nil {
         log.Printf("사용자 %v에 대한 사진 조회 오류: %v", userId, err)
         c.JSON(http.StatusInternalServerError, gin.H{"error": "사진 조회 오류"})
@@ -57,7 +57,7 @@ func GetPicturesByUserId(c *gin.Context) {
     // 각 행을 Picture 구조체로 스캔합니다.
     for rows.Next() {
         var picture Picture
-        if err := rows.Scan(&picture.PictureID, &picture.UserID, &picture.ImageURL, &picture.CreatedAt, &picture.DeletedAt, &picture.Bookmarked); err != nil {
+        if err := rows.Scan(&picture.PictureID, &picture.UserID, &picture.ImageURL, &picture.CreatedAt, &picture.Bookmarked); err != nil {
             log.Printf("사진 스캔 오류: %v", err)
             continue
         }
@@ -76,9 +76,9 @@ func GetPictureByPictureId(c *gin.Context) {
     pictureId := c.Param("picture_id")
 
     // 사진 ID로 사진을 조회합니다.
-    rows, err := db.Query("SELECT picture_id, user_id, image_url, create_at, delete_at, bookmarked FROM Pictures WHERE picture_id = ?", pictureId)
+    rows, err := db.Query("SELECT picture_id, user_id, image_url, create_at, bookmarked FROM Pictures WHERE picture_id = ?", pictureId)
     if err != nil {
-        log.Printf("사진 조회 오류: %v", pictureId, err)
+        log.Printf("사진 조회 오류: %v, %v", pictureId, err)
         c.JSON(http.StatusInternalServerError, gin.H{"error": "사진 조회 오류"})
         return
     }
@@ -87,7 +87,7 @@ func GetPictureByPictureId(c *gin.Context) {
     // 각 행을 Picture 구조체로 스캔합니다.
     for rows.Next() {
         var picture Picture
-        if err := rows.Scan(&picture.PictureID, &picture.UserID, &picture.ImageURL, &picture.CreatedAt, &picture.DeletedAt, &picture.Bookmarked); err != nil {
+        if err := rows.Scan(&picture.PictureID, &picture.UserID, &picture.ImageURL, &picture.CreatedAt, &picture.Bookmarked); err != nil {
             log.Printf("사진 스캔 오류: %v", err)
             continue
         }

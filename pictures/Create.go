@@ -263,7 +263,7 @@ func GetPicturesByUrls(c *gin.Context, urls []string) {
 		placeholders[i] = "?"
 		args[i] = url
 	}
-	query := fmt.Sprintf("SELECT picture_id, user_id, image_url, create_at, delete_at, bookmarked FROM Pictures WHERE image_url IN (%s)", strings.Join(placeholders, ","))
+	query := fmt.Sprintf("SELECT picture_id, user_id, image_url, create_at, bookmarked FROM Pictures WHERE image_url IN (%s)", strings.Join(placeholders, ","))
 
 	// 쿼리를 실행합니다.
 	rows, err := db.Query(query, args...)
@@ -277,7 +277,7 @@ func GetPicturesByUrls(c *gin.Context, urls []string) {
 	// 결과를 스캔합니다.
 	for rows.Next() {
 		var picture Picture
-		if err := rows.Scan(&picture.PictureID, &picture.UserID, &picture.ImageURL, &picture.CreatedAt, &picture.DeletedAt, &picture.Bookmarked); err != nil {
+		if err := rows.Scan(&picture.PictureID, &picture.UserID, &picture.ImageURL, &picture.CreatedAt, &picture.Bookmarked); err != nil {
 			log.Printf("사진 스캔 중 오류 발생: %v", err)
 			continue
 		}
