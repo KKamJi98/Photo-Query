@@ -61,19 +61,19 @@ func CreatePictures(c *gin.Context) {
 		return
 	}
 	log.Println("AWS 세션 생성 성공\t", sess.Config.Credentials)
-	
+
 	var wg sync.WaitGroup
 	errChan := make(chan error, len(fileHeader))
-	
+
 	var filesPerRoutine int
-	
+
 	if len(fileHeader) < 32 {
 		filesPerRoutine = len(fileHeader)
 	} else {
 		filesPerRoutine = (len(fileHeader) + 31) / 32
 	}
 	log.Printf("파일 일괄 처리 크기: %d", filesPerRoutine)
-		
+
 	// 각 파일에 대한 병렬 처리를 수행합니다.
 	for i := 0; i < len(fileHeader); i += filesPerRoutine {
 		end := i + filesPerRoutine
@@ -184,7 +184,6 @@ func uploadToS3(fileReader io.Reader, fileName string, sess *session.Session, er
 
 	uploader := s3manager.NewUploader(sess)
 	uuid := uuid.New()
-
 	fileExtension := getFileExtension(fileName)
 
 	// uploadOutput, err := uploader.Upload(&s3manager.UploadInput{
@@ -193,10 +192,16 @@ func uploadToS3(fileReader io.Reader, fileName string, sess *session.Session, er
 	// 	Body:   fileReader,
 	// })
 
+	// 사용자 정의 메타데이터 설정
+	metadata := map[string]*string{
+		"user_id":    aws.String(fmt.Sprintf("%v", pic.UserID)),    // 예를 들어 pic 구조체에서 UserID 필드를 사용
+	}
+
 	_, err := uploader.Upload(&s3manager.UploadInput{
-		Bucket: aws.String(s3BucketName),
-		Key:    aws.String(fmt.Sprintf("%v%v%v", "original/", uuid.String(), fileExtension)),
-		Body:   fileReader,
+		Bucket:   aws.String(s3BucketName),
+		Key:      aws.String(fmt.Sprintf("%v%v%v", "original/", uuid.String(), fileExtension)),
+		Body:     fileReader,
+		Metadata: metadata,
 	})
 
 	if err != nil {
@@ -285,5 +290,5 @@ func GetPicturesByUrls(c *gin.Context, urls []string) {
 	}
 
 	// 클라이언트에게 JSON 형식으로 결과를 반환합니다.
-	c.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("%v 파일 업로드 성공", uploadFileCount) ,"pictures": pictures})
+	c.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("%v 파일 업로드 성공", uploadFileCount), "pictures": pictures})
 }
