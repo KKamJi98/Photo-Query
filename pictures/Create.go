@@ -219,7 +219,7 @@ func uploadToS3(fileReader io.Reader, fileName string, sess *session.Session, er
 	}
 
 	// 이미지 리사이징
-	resizedImg := resize.Thumbnail(150, 150, img, resize.Lanczos3)
+	resizedImg := resize.Thumbnail(300, 300, img, resize.Lanczos3)
 
 	// 리사이즈된 이미지를 저장할 버퍼
 	var resizedBuf bytes.Buffer
