@@ -58,7 +58,7 @@ func GetPicturesByUserId(c *gin.Context) {
 	log.Printf("last: %s", last)
 
 	// 사용자 ID별로 사진을 조회합니다.
-	rows, err := db.Query("SELECT picture_id, user_id, image_url, create_at, bookmarked FROM Pictures WHERE (user_id = ? AND picture_id > ?) LIMIT ?", userId, last, limit)
+	rows, err := db.Query("SELECT picture_id, user_id, image_url, create_at, bookmarked FROM Pictures WHERE (user_id = ? AND picture_id < ?) ORDER BY picture_id DESC LIMIT ?", userId, last, limit)
 	if err != nil {
 		log.Printf("사용자 %v에 대한 사진 조회 오류: %v", userId, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "사진 조회 오류"})
