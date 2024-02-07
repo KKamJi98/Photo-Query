@@ -1,16 +1,16 @@
 package main
 
 import (
-	"ace-app/pictures"         
-	"github.com/gin-gonic/gin" 
-	"github.com/joho/godotenv" 
+	"ace-app/pictures"
 	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"log"
 	"os"
 )
 
 func main() {
-	// .env 파일에서 환경 변수 로드 
+	// .env 파일에서 환경 변수 로드
 	err := godotenv.Load("./env/.env")
 	if err != nil {
 		log.Fatal("Error loading .env file") // .env 파일 로드 실패 => 로그 출력 && 종료
@@ -20,15 +20,14 @@ func main() {
 
 	// gin 라우터 인스턴스 생성
 	r := gin.Default()
-	
+
 	config := cors.Config{
 		AllowAllOrigins: true,
 		AllowMethods:    []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:    []string{"*"},
 	}
 	r.Use(cors.New(config))
-	
-	
+
 	// RESTful API endpoint 생성
 	r.POST("/pictures", picture.CreatePictures)                    // 사진 생성 API
 	r.GET("/pictures", picture.GetPictures)                        // 모든 사진 조회 API

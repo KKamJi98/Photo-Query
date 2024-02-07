@@ -49,13 +49,13 @@ func GetPicturesByUserId(c *gin.Context) {
 	if limit == "" {
 		limit = "20"
 	}
-    log.Printf("%s", limit)
+	log.Printf("%s", limit)
 
 	last := c.Query("last")
 	if last == "" {
-        last = "0"
+		last = "0"
 	}
-    log.Printf("last: %s", last)
+	log.Printf("last: %s", last)
 
 	// 사용자 ID별로 사진을 조회합니다.
 	rows, err := db.Query("SELECT picture_id, user_id, image_url, create_at, bookmarked FROM Pictures WHERE (user_id = ? AND picture_id > ?) LIMIT ?", userId, last, limit)
