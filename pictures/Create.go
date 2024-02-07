@@ -2,24 +2,40 @@ package picture
 
 import (
 	"ace-app/databases"
-	"archive/zip"
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/gin-gonic/gin"
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/google/uuid"
-	"io"
+	"image"
+
+	// "image"
+
 	"log"
-	"mime/multipart"
-	"net/http"
 	"os"
 	"strings"
 	"sync"
 	"time"
+
+	"io"
+
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+	_ "github.com/go-sql-driver/mysql"
+
+	"archive/zip"
+	// "golang.org/x/image/bmp"
+	"image/gif"
+	"image/jpeg"
+	"image/png"
+	"mime/multipart"
+
+	"github.com/google/uuid"
+	"github.com/nfnt/resize"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
 var uploadFileCount int
@@ -60,7 +76,8 @@ func CreatePictures(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": 1000, "message": "aws 세션을 찾을 수 없음"}) // 1000번 에러 코드 반환
 		return
 	}
-	log.Println("AWS 세션 생성 성공\t", sess.Config.Credentials)
+	// log.Println("AWS 세션 생성 성공\t", sess.Config.Credentials)
+	log.Println("AWS 세션 생성 성공")
 
 	var wg sync.WaitGroup
 	errChan := make(chan error, len(fileHeader))
@@ -68,7 +85,7 @@ func CreatePictures(c *gin.Context) {
 	var filesPerRoutine int
 
 	if len(fileHeader) < 32 {
-		filesPerRoutine = len(fileHeader)
+		filesPerRoutine = 1
 	} else {
 		filesPerRoutine = (len(fileHeader) + 31) / 32
 	}
@@ -109,7 +126,7 @@ func CreatePictures(c *gin.Context) {
 
 	log.Printf("%d개 파일 업로드 성공", uploadFileCount)
 	if uploadFileCount == 0 {
-		c.JSON(200, gin.H{"message": fmt.Sprintf("%v개 파일 처리 완료", uploadFileCount)})
+		c.JSON(200, gin.H{"message": fmt.Sprintf("%v개 파일 처리 완료 => 존재하지 않는 사용자", uploadFileCount)})
 	} else {
 		GetPicturesByUrls(c, urls)
 	}
@@ -138,7 +155,7 @@ func processFile(file *multipart.FileHeader, sess *session.Session, errChan chan
 		}
 		numOfFiles := len(zipReader.File)
 		if numOfFiles < 32 {
-			numOfFiles = len(zipReader.File)
+			numOfFiles = 1
 		} else {
 			numOfFiles = (len(zipReader.File) + 31) / 32
 		}
@@ -177,43 +194,81 @@ func processFile(file *multipart.FileHeader, sess *session.Session, errChan chan
 // uploadToS3 함수는 파일을 AWS S3에 업로드합니다.
 func uploadToS3(fileReader io.Reader, fileName string, sess *session.Session, errChan chan<- error, pic Picture) {
 	if fileReader == nil {
-		errChan <- errors.New("fileReader가 nil입니다")
+		errChan <- errors.New("fileReader가 nil입니다 => 업로드할 파일이 없음")
 		return
 	}
-	s3BucketName := os.Getenv("BUCKET_NAME")
-
+	// resizeFile := fileReader
 	uploader := s3manager.NewUploader(sess)
 	uuid := uuid.New()
 	fileExtension := getFileExtension(fileName)
 
-	// uploadOutput, err := uploader.Upload(&s3manager.UploadInput{
-	// 	Bucket: aws.String(s3BucketName),
-	// 	Key:    aws.String(fmt.Sprintf("%v%v%v", "original/", uuid.String(), fileExtension)),
-	// 	Body:   fileReader,
-	// })
+	// var resizedImage io.Reader
+
+	// fileReader에서 데이터를 읽어들여 메모리에 저장
+	originalData, err := io.ReadAll(fileReader)
+	if err != nil {
+		errChan <- fmt.Errorf("원본 파일 데이터 읽기 실패: %w", err)
+		return
+	}
+
+	// 원본 데이터를 바탕으로 image.Image 객체 생성
+	img, _, err := image.Decode(bytes.NewReader(originalData))
+	if err != nil {
+		errChan <- fmt.Errorf("이미지 디코드 실패: %w", err)
+		return
+	}
+
+	// 이미지 리사이징
+	resizedImg := resize.Thumbnail(150, 150, img, resize.Lanczos3)
+
+	// 리사이즈된 이미지를 저장할 버퍼
+	var resizedBuf bytes.Buffer
+	switch strings.ToLower(fileExtension) {
+	case ".jpg", ".jpeg":
+		err = jpeg.Encode(&resizedBuf, resizedImg, nil)
+	case ".png":
+		err = png.Encode(&resizedBuf, resizedImg)
+	case ".gif":
+		err = gif.Encode(&resizedBuf, resizedImg, nil)
+	// BMP 포맷은 "golang.org/x/image/bmp" 패키지에서 Encode 메소드를 제공하지 않으므로, 필요시 추가 구현이 필요할 수 있습니다.
+	default:
+		errChan <- errors.New("지원하지 않는 파일 형식")
+		return
+	}
+	if err != nil {
+		errChan <- fmt.Errorf("리사이즈된 이미지 인코딩 실패: %w", err)
+		return
+	}
 
 	// 사용자 정의 메타데이터 설정
 	metadata := map[string]*string{
-		"user_id":    aws.String(fmt.Sprintf("%v", pic.UserID)),    // 예를 들어 pic 구조체에서 UserID 필드를 사용
+		"user_id": aws.String(fmt.Sprintf("%v", pic.UserID)), // 예를 들어 pic 구조체에서 UserID 필드를 사용
 	}
+	s3BucketName := os.Getenv("BUCKET_NAME")
 
-	_, err := uploader.Upload(&s3manager.UploadInput{
-		Bucket:   aws.String(s3BucketName),
-		Key:      aws.String(fmt.Sprintf("%v%v%v", "original/", uuid.String(), fileExtension)),
-		Body:     fileReader,
-		Metadata: metadata,
-	})
+	_, err = uploader.Upload(&s3manager.UploadInput{
+        Bucket:   aws.String(s3BucketName),
+        Key:      aws.String(fmt.Sprintf("original/%v%v", uuid.String(), fileExtension)),
+        Body:     bytes.NewReader(originalData), // 메모리에 저장된 원본 데이터 사용
+        Metadata: metadata,
+    })
+    if err != nil {
+        errChan <- fmt.Errorf("원본 이미지 업로드 실패: %w", err)
+        return
+    }
 
-	if err != nil {
-		log.Printf("업로드 중 오류 발생: %v", err)
-		errChan <- err
-		return
-	}
-
-	if err != nil {
-		errChan <- err
-		return
-	}
+	// 리사이즈된 이미지 업로드
+    _, err = uploader.Upload(&s3manager.UploadInput{
+        Bucket:   aws.String(s3BucketName),
+        Key:      aws.String(fmt.Sprintf("thumbnail/%v%v", uuid.String(), fileExtension)),
+        // Body:     bytes.NewReader(resizedBuf.Bytes()), // 리사이즈된 이미지 데이터 사용
+        Body:     bytes.NewReader(resizedBuf.Bytes()), // 리사이즈된 이미지 데이터 사용
+        Metadata: metadata,
+    })
+    if err != nil {
+        errChan <- fmt.Errorf("썸네일 이미지 업로드 실패: %w", err)
+        return
+    }
 
 	db := database.ConnectDB()
 	defer db.Close()
@@ -222,10 +277,11 @@ func uploadToS3(fileReader io.Reader, fileName string, sess *session.Session, er
 	// imageURL := uploadOutput.Location
 	urls = append(urls, imageURL)
 
-	_, err2 := db.Exec("INSERT INTO Pictures (user_id, image_url, create_at, bookmarked) VALUES (?, ?, ?, ?)",
+	_, err = db.Exec("INSERT INTO Pictures (user_id, image_url, create_at, bookmarked) VALUES (?, ?, ?, ?)",
 		pic.UserID, imageURL, currentTime, 0)
-	if err2 != nil {
-		errChan <- err2
+	if err != nil {
+		// log.Printf("%v 라는 사용자는 존재하지 않습니다.", pic.UserID)
+		errChan <- err
 		return
 	}
 
@@ -236,7 +292,7 @@ func uploadToS3(fileReader io.Reader, fileName string, sess *session.Session, er
 // isImageFile 함수는 파일 이름이 이미지 파일을 나타내는지 확인합니다.
 func isImageFile(fileName string) bool {
 	// 지원하는 이미지 파일 확장자를 추가합니다.
-	validExtensions := []string{".png", ".jpg", ".jpeg", ".gif", ".bmp"}
+	validExtensions := []string{".png", ".jpg", ".jpeg", ".gif"}
 	for _, ext := range validExtensions {
 		if strings.HasSuffix(strings.ToLower(fileName), ext) {
 			return true

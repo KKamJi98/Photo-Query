@@ -1,18 +1,18 @@
 package picture
 
-import(	
+import (
 	"database/sql"
-	"time"
 	"encoding/json"
+	"time"
 )
 
 // Picture 구조체는 사진 레코드의 구조를 나타냅니다.
 type Picture struct {
-	PictureID  int64        `json:"picture_id"` // 사진 ID
-	UserID     string       `json:"user_id"` // 사용자 ID
-	ImageURL   string       `json:"image_url"` // 이미지 URL
-	CreatedAt  CustomTime	`json:"created_at,omitempty"` // 생성 시간, 값이 없으면 JSON에서 생략
-	Bookmarked int8         `json:"bookmarked"` // 북마크 여부
+	PictureID  int64      `json:"picture_id"`           // 사진 ID
+	UserID     string     `json:"user_id"`              // 사용자 ID
+	ImageURL   string     `json:"image_url"`            // 이미지 URL
+	CreatedAt  CustomTime `json:"created_at,omitempty"` // 생성 시간, 값이 없으면 JSON에서 생략
+	Bookmarked int8       `json:"bookmarked"`           // 북마크 여부
 }
 
 // CustomTime 구조체 => sql.NullTime을 확장 => JSON 마샬링 및 언마샬링 커스텀
