@@ -1,6 +1,6 @@
 FROM golang:1.22.0-alpine
-COPY ./main /picture-backend
 WORKDIR /picture-backend
+COPY ./main .
 # RUN set -x && \
 #     mkdir env && \
 #     echo DB_USER=admin >> /picture-backend/env/.env && \
