@@ -35,6 +35,25 @@ pipeline {
             }
         }
 
+        stage('go build') {
+            steps {
+                sh "mkdir env"
+                sh "echo DB_USER=admin >> /picture-backend/env/.env"
+                sh "echo DB_NAME=app >> /picture-backend/env/.env"
+                sh "go mod tidy"
+                sh "go build -o main"
+                sh "chmod +x ./main"
+            }
+            post {
+                failure{
+                    echo 'go build failure'
+                }
+                success{
+                    echo 'go build success'
+                }
+            }
+        }
+
         stage('image build') {
             steps {
                 sh "docker build -t ${ECR_URL}:${currentBuild.number} ."
