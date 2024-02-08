@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"math"
 )
 
 // GetPictures 함수는 데이터베이스에서 모든 사진을 가져옵니다.
@@ -59,14 +60,15 @@ func GetPicturesByUserId(c *gin.Context) {
 		err := db.QueryRow("SELECT picture_id FROM Pictures WHERE user_id = ? ORDER BY picture_id DESC LIMIT 1", userId).Scan(&pictureID)
 		if err != nil {
 			log.Printf("Error retrieving last picture: %v", err)
-			return // 에러 시 함수 종료 혹은 적절한 에러 처리
+			// return // 에러 시 함수 종료 혹은 적절한 에러 처리
+			pictureID = strconv.Itoa(math.MaxInt64 - 1)
 		}
 		lastIndex, err := strconv.Atoi(pictureID)
 		if err != nil {
 			log.Printf("Error converting pictureID to int: %v", err)
 			return // 변환 에러 시 함수 종료 혹은 적절한 에러 처리
 		}
-		lastIndex += 1 // lastIndex 값을 1 증가
+		lastIndex += 1                 // lastIndex 값을 1 증가
 		last = strconv.Itoa(lastIndex) // 다시 문자열로 변환
 	}
 	log.Printf("last: %s", last)
