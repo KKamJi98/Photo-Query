@@ -38,8 +38,8 @@ pipeline {
         stage('go build') {
             steps {
                 sh "mkdir env"
-                sh "echo DB_USER=admin >> /picture-backend/env/.env"
-                sh "echo DB_NAME=app >> /picture-backend/env/.env"
+                sh "echo DB_USER=admin >> ./env/.env"
+                sh "echo DB_NAME=app >> ./env/.env"
                 sh "go mod tidy"
                 sh "go build -o main"
                 sh "chmod +x ./main"
