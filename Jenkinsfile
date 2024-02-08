@@ -37,7 +37,7 @@ pipeline {
 
         stage('go build') {
             steps {
-                sh "mkdir env"
+                sh "mkdir -p ./env"
                 sh "echo DB_USER=admin >> ./env/.env"
                 sh "echo DB_NAME=app >> ./env/.env"
                 sh "go mod tidy"
