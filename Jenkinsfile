@@ -41,7 +41,7 @@ pipeline {
                 sh "echo DB_USER=admin >> ./env/.env"
                 sh "echo DB_NAME=app >> ./env/.env"
                 sh "go mod tidy"
-                sh "go build -o main"
+                sh "go build -o main ./cmd/main.go"
                 sh "chmod +x ./main"
             }
             post {
