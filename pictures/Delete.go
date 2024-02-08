@@ -11,15 +11,17 @@ import (
 
 // DeletePicturesByPostId는 그림들을 ID로 삭제하는 작업을 처리합니다.
 func DeletePicturesByPostId(c *gin.Context) {
-	// 예상되는 JSON 데이터 형식과 일치하는 구조체를 정의합니다.
-	type picture struct {
-		PictureID int64 `json:"picture_id"`
-	}
 
-	var pictures []picture
+	// 예상되는 JSON 데이터 형식과 일치하는 구조체를 정의합니다.
+	// type picture struct {
+	// 	PictureID int64 `json:"picture_id"`
+	// }
+
+	var pictures []Picture
 
 	// 요청에서 JSON 데이터를 추출하고 언마샬합니다.
 	jsonData := c.PostForm("json_data")
+	log.Printf("%v", jsonData)
 	if err := json.Unmarshal([]byte(jsonData), &pictures); err != nil {
 		log.Printf("잘못된 JSON 데이터: %v", err)
 		c.JSON(400, gin.H{"message": "잘못된 JSON 데이터", "error": err.Error()})
