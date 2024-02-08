@@ -21,7 +21,7 @@ func DeletePicturesByPostId(c *gin.Context) {
 
 	// 요청에서 JSON 데이터를 추출하고 언마샬합니다.
 	jsonData := c.PostForm("json_data")
-	log.Printf("%v", jsonData)
+	log.Printf("%v \t %T", jsonData, jsonData)
 	if err := json.Unmarshal([]byte(jsonData), &pictures); err != nil {
 		log.Printf("잘못된 JSON 데이터: %v", err)
 		c.JSON(400, gin.H{"message": "잘못된 JSON 데이터", "error": err.Error()})
