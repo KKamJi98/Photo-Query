@@ -8,8 +8,6 @@ import (
 	"fmt"
 	"image"
 
-	// "image"
-
 	"log"
 	"os"
 	"strings"
@@ -24,7 +22,6 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 
 	"archive/zip"
-	// "golang.org/x/image/bmp"
 	"image/gif"
 	"image/jpeg"
 	"image/png"
@@ -248,7 +245,7 @@ func uploadToS3(fileReader io.Reader, fileName string, sess *session.Session, er
 
 	_, err = uploader.Upload(&s3manager.UploadInput{
         Bucket:   aws.String(s3BucketName),
-        Key:      aws.String(fmt.Sprintf("original/%v%v", uuid.String(), fileExtension)),
+        Key:      aws.String(fmt.Sprintf("original/%v/%v%v",pic.UserID ,uuid.String(), fileExtension)),
         Body:     bytes.NewReader(originalData), // 메모리에 저장된 원본 데이터 사용
         Metadata: metadata,
     })
