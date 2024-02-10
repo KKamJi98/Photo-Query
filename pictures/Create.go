@@ -257,7 +257,7 @@ func uploadToS3(fileReader io.Reader, fileName string, sess *session.Session, er
 	// 리사이즈된 이미지 업로드
     _, err = uploader.Upload(&s3manager.UploadInput{
         Bucket:   aws.String(s3BucketName),
-        Key:      aws.String(fmt.Sprintf("thumbnail/%v%v", uuid.String(), fileExtension)),
+        Key:      aws.String(fmt.Sprintf("thumbnail/%v/%v%v",pic.UserID ,uuid.String(), fileExtension)),
         // Body:     bytes.NewReader(resizedBuf.Bytes()), // 리사이즈된 이미지 데이터 사용
         Body:     bytes.NewReader(resizedBuf.Bytes()), // 리사이즈된 이미지 데이터 사용
         Metadata: metadata,
