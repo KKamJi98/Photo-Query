@@ -111,3 +111,32 @@ func GetPictureByPictureId(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"pictures": pictures})
 }
+
+func GetPicuresByBookmarked(c *gin.Context) {
+	db := database.ConnectDB()
+	defer db.Close()
+
+	var pictures []Picture
+	userId := c.Param("user_id")
+
+	// 사진 ID로 사진을 조회합니다.
+	rows, err := db.Query("SELECT picture_id, user_id, image_url, create_at, bookmarked FROM Pictures WHERE user_id = ? AND bookmarked = ? ", userId, 1)
+	if err != nil {
+		log.Printf("사진 조회 오류: %v, %v", userId, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "사진 조회 오류"})
+		return
+	}
+	defer rows.Close()
+
+	// 각 행을 Picture 구조체로 스캔합니다.
+	for rows.Next() {
+		var picture Picture
+		if err := rows.Scan(&picture.PictureID, &picture.UserID, &picture.ImageURL, &picture.CreatedAt, &picture.Bookmarked); err != nil {
+			log.Printf("사진 스캔 오류: %v", err)
+			continue
+		}
+		pictures = append(pictures, picture)
+	}
+
+	c.JSON(http.StatusOK, gin.H{"pictures": pictures})
+}
