@@ -37,9 +37,5 @@ func Bookmark(c *gin.Context) {
 	}
     log.Printf("affacted %v\t%T", result, result)
 
-    // affected, err := result.RowsAffected()
-    // if err != nil {
-    //     log.Fatal(err)
-    // }
     c.JSON(http.StatusOK, gin.H{"message": "북마크 반영 성공", "bookmarked": picture.Bookmarked})
 }
