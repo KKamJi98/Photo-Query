@@ -1,8 +1,8 @@
 package main
 
 import (
-	"ace-app/pictures"
 	"ace-app/bookmark"
+	"ace-app/pictures"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -30,14 +30,14 @@ func main() {
 	r.Use(cors.New(config))
 
 	// RESTful API endpoint 생성
-	r.POST("/pictures", picture.CreatePictures)                    				// 사진 생성 API
-	r.GET("/pictures", picture.GetPictures)                        				// 모든 사진 조회 API
-	r.GET("/users/:user_id/pictures", picture.GetPicturesByUserId) 				// 특정 사용자의 사진 조회 API
-	r.GET("/picture/:picture_id", picture.GetPictureByPictureId)   				// 특정 사진 조회 API
-	r.DELETE("/pictures", picture.DeletePicturesByPostId)          				// 사진 삭제 API
+	r.POST("/pictures", picture.CreatePictures)                    // 사진 생성 API
+	r.GET("/pictures", picture.GetPictures)                        // 모든 사진 조회 API
+	r.GET("/users/:user_id/pictures", picture.GetPicturesByUserId) // 특정 사용자의 사진 조회 API
+	r.GET("/picture/:picture_id", picture.GetPictureByPictureId)   // 특정 사진 조회 API
+	r.DELETE("/pictures", picture.DeletePicturesByPostId)          // 사진 삭제 API
 
-	r.POST("/pictures/bookmark/:picture_id", bookmark.Bookmark)    				// 북마크 API
-	r.GET("/users/:user_id/pictures/bookmark", picture.GetPicuresByBookmarked) 	// 북마크
+	r.POST("/pictures/bookmark/:picture_id", bookmark.Bookmark)                // 북마크 API
+	r.GET("/users/:user_id/pictures/bookmark", picture.GetPicuresByBookmarked) // 북마크 된 사진 조회 API
 
 	// 8080 포트에서 서버 시작
 	if err := r.Run(":8080"); err != nil {

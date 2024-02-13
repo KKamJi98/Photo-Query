@@ -116,11 +116,24 @@ func GetPicuresByBookmarked(c *gin.Context) {
 	db := database.ConnectDB()
 	defer db.Close()
 
+	limit := c.Query("limit")
+	if limit == "" {
+		limit = "20"
+	}
+	log.Printf("%s", limit)
+
+	last := c.Query("last")
+	if last == "" {
+		last = strconv.Itoa(math.MaxInt64)
+		log.Printf("%s", "last index not found")
+	}
+	log.Printf("last: %s", last)
+	
 	var pictures []Picture
 	userId := c.Param("user_id")
 
 	// 사진 ID로 사진을 조회합니다.
-	rows, err := db.Query("SELECT picture_id, user_id, image_url, create_at, bookmarked FROM Pictures WHERE user_id = ? AND bookmarked = ? ", userId, 1)
+	rows, err := db.Query("SELECT picture_id, user_id, image_url, create_at, bookmarked FROM Pictures WHERE (user_id = ? AND picture_id < ? AND bookmarked = 1) ORDER BY picture_id DESC LIMIT ?", userId, last, limit)
 	if err != nil {
 		log.Printf("사진 조회 오류: %v, %v", userId, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "사진 조회 오류"})
