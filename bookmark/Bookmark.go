@@ -32,7 +32,7 @@ func Bookmark(c *gin.Context) {
 	result, err := db.Exec("UPDATE Pictures SET bookmarked =? WHERE picture_id =?", picture.Bookmarked, pictureID)
 	if err != nil {
 		log.Fatal(err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "북마크 반영 실패"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "북마크 반영 실패 "})
 		return
 	}
     log.Printf("affacted %v\t%T", result, result)
