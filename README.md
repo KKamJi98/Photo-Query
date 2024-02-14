@@ -11,11 +11,12 @@ port : 8080
 - [x] post 생성 API 정리
 - [x] post 삭제 API [RDS 생성 시 테이블에 맞게 수정]
 - [x] CI 구성 (Jenkins)
-## Next Progress :fire:
 - [x] 조회 무한 스크롤 지원
+- [x] 북마크 API
+## In Progress :fire:
+- [ ] S3에서 Object를 삭제 했을 때 그 사진에 대한 aws recognition의 collection까지 같이 삭제
+
 ## To Do :turtle:
-- [ ] JWT토큰 Decode 후 user_id 추출 
-- [ ] 북마크 API
 
 ## API 명세서
 https://docs.google.com/spreadsheets/d/1b4K21uRSqM8BMv-PaZLhBoVLw22vt5KjUfqVjiu8_5k/edit#gid=0
