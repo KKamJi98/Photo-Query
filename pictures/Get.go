@@ -63,7 +63,7 @@ func GetPicturesByUserId(c *gin.Context) {
 	log.Printf("last: %s", last)
 
 	bookmark := c.Query("bookmark")
-	if bookmark == "" {
+	if bookmark == "" || bookmark == "0" {
 		bookmark = "0"
 	} else {
 		bookmark = "1"
