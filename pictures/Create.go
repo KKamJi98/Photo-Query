@@ -244,28 +244,28 @@ func uploadToS3(fileReader io.Reader, fileName string, sess *session.Session, er
 	s3BucketName := os.Getenv("BUCKET_NAME")
 
 	_, err = uploader.Upload(&s3manager.UploadInput{
-        Bucket:   aws.String(s3BucketName),
-        Key:      aws.String(fmt.Sprintf("original/%v/%v%v",pic.UserID ,uuid.String(), fileExtension)),
-        Body:     bytes.NewReader(originalData), // 메모리에 저장된 원본 데이터 사용
-        Metadata: metadata,
-    })
-    if err != nil {
-        errChan <- fmt.Errorf("원본 이미지 업로드 실패: %w", err)
-        return
-    }
+		Bucket:   aws.String(s3BucketName),
+		Key:      aws.String(fmt.Sprintf("original/%v/%v%v", pic.UserID, uuid.String(), fileExtension)),
+		Body:     bytes.NewReader(originalData), // 메모리에 저장된 원본 데이터 사용
+		Metadata: metadata,
+	})
+	if err != nil {
+		errChan <- fmt.Errorf("원본 이미지 업로드 실패: %w", err)
+		return
+	}
 
 	// 리사이즈된 이미지 업로드
-    _, err = uploader.Upload(&s3manager.UploadInput{
-        Bucket:   aws.String(s3BucketName),
-        Key:      aws.String(fmt.Sprintf("thumbnail/%v/%v%v",pic.UserID ,uuid.String(), fileExtension)),
-        // Body:     bytes.NewReader(resizedBuf.Bytes()), // 리사이즈된 이미지 데이터 사용
-        Body:     bytes.NewReader(resizedBuf.Bytes()), // 리사이즈된 이미지 데이터 사용
-        Metadata: metadata,
-    })
-    if err != nil {
-        errChan <- fmt.Errorf("썸네일 이미지 업로드 실패: %w", err)
-        return
-    }
+	_, err = uploader.Upload(&s3manager.UploadInput{
+		Bucket: aws.String(s3BucketName),
+		Key:    aws.String(fmt.Sprintf("thumbnail/%v/%v%v", pic.UserID, uuid.String(), fileExtension)),
+		// Body:     bytes.NewReader(resizedBuf.Bytes()), // 리사이즈된 이미지 데이터 사용
+		Body:     bytes.NewReader(resizedBuf.Bytes()), // 리사이즈된 이미지 데이터 사용
+		Metadata: metadata,
+	})
+	if err != nil {
+		errChan <- fmt.Errorf("썸네일 이미지 업로드 실패: %w", err)
+		return
+	}
 
 	db := database.ConnectDB()
 	defer db.Close()

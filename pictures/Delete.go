@@ -2,11 +2,21 @@ package picture
 
 import (
 	"ace-app/databases"
+	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
+
+	"github.com/aws/aws-sdk-go/aws"
+	// "github.com/aws/aws-sdk-go/service/s3"
+	// "github.com/aws/aws-sdk-go-v2/feature/s3/manager"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	// "github.com/aws/smithy-go"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/gin-gonic/gin"
 )
 
 // DeletePicturesByPostId는 그림들을 ID로 삭제하는 작업을 처리합니다.
@@ -31,6 +41,9 @@ func DeletePicturesByPostId(c *gin.Context) {
 	db := database.ConnectDB()
 	defer db.Close()
 
+	// s3에서 이미지파일 삭제
+	s3DeletePictures(pictures, db)
+
 	// 삭제 작업 결과를 추적하기 위한 카운터를 초기화합니다.
 	errorCount := 0
 	successCount := 0
@@ -38,6 +51,7 @@ func DeletePicturesByPostId(c *gin.Context) {
 
 	// 각 그림 ID를 반복하고 삭제를 시도합니다.
 	for _, pic := range pictures {
+		//! 데이터베이스에서 사진 삭제
 		result, err := db.Exec("DELETE FROM Pictures WHERE picture_id = ?", pic.PictureID)
 		if err != nil {
 			log.Printf("%d번 ID를 가진 그림 삭제 중 오류 발생: %v", pic.PictureID, err)
@@ -66,3 +80,96 @@ func DeletePicturesByPostId(c *gin.Context) {
 	// 삭제 작업 결과를 응답합니다.
 	c.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("%d개의 그림 삭제, %d개의 오류 발생, %d개의 그림 ID를 찾을 수 없음", successCount, errorCount, nofoundCount)})
 }
+
+func s3DeletePictures(picures []Picture, db *sql.DB) {
+	// db := database.ConnectDB()
+	// defer db.Close()
+	// TODO
+	//* picutre_id를 사용해서 이미지 이름, user_id 찾기
+	//* 이것을 키값으로 S3 Bucket에서 이미지 삭제
+	var imageName, userId string
+	var s3ImageOriginalObjectKeys []string
+	var s3ImageThumbnailObjectKeys []string
+
+	for _, pic := range picures {
+		query := db.QueryRow("SELECT image_url, user_id FROM Pictures WHERE picture_id =?", pic.PictureID)
+		err := query.Scan(&imageName, &userId)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				log.Printf("No results found.")
+			} else {
+				log.Printf("Query failed: %v", err)
+			}
+		}
+		s3ImageOriginalObjectKeys = append(s3ImageOriginalObjectKeys, fmt.Sprintf("%s/%s/%s", "original", userId, imageName))
+		s3ImageThumbnailObjectKeys = append(s3ImageThumbnailObjectKeys, fmt.Sprintf("%s/%s/%s", "thumbnail", userId, imageName))
+	}
+	log.Printf("userId => %v\t imageName => %v \t %T", userId, imageName)
+
+	log.Printf("%v", s3ImageOriginalObjectKeys)
+
+	// S3 클라이언트 초기화 (예시 코드, 실제 구현은 환경에 맞게 조정)
+	cfg, err := config.LoadDefaultConfig(context.TODO())
+	if err != nil {
+		log.Fatalf("unable to load SDK config, %v", err)
+	}
+	s3Client := s3.NewFromConfig(cfg)
+
+	// BucketBasics 인스턴스 생성
+	basics := BucketBasics{S3Client: s3Client}
+	basics.DeleteObjects("rapa-app-image-bucket", s3ImageOriginalObjectKeys)
+	basics.DeleteObjects("rapa-app-image-bucket", s3ImageThumbnailObjectKeys)
+}
+
+type BucketBasics struct {
+	S3Client *s3.Client
+}
+
+func (basics BucketBasics) DeleteObjects(bucketName string, objectKeys []string) error {
+	if len(objectKeys) == 0 {
+		log.Printf("삭제할 객체 키가 제공되지 않았습니다.")
+		return nil // 또는 적절한 에러 반환
+	}
+
+	var objectIdentifiers []types.ObjectIdentifier
+	for _, key := range objectKeys {
+		objectIdentifiers = append(objectIdentifiers, types.ObjectIdentifier{Key: aws.String(key)})
+	}
+
+	output, err := basics.S3Client.DeleteObjects(context.TODO(), &s3.DeleteObjectsInput{
+		Bucket: aws.String(bucketName),
+		Delete: &types.Delete{Objects: objectIdentifiers},
+	})
+	if err != nil {
+		log.Printf("%v 버킷에서 객체를 삭제하지 못했습니다. 원인: %v\n", bucketName, err)
+		return err
+	}
+
+	// log.Printf("%v",output)
+	if len(output.Errors) > 0 {
+		for _, e := range output.Errors {
+			log.Printf("객체 %s 삭제 에러: %s", *e.Key, *e.Message)
+		}
+	} else {
+		log.Printf("%v 개의 객체를 삭제했습니다.\n", len(output.Deleted))
+	}
+
+	return nil
+}
+
+// func (basics BucketBasics) DeleteObjects(bucketName string, objectKeys []string) error {
+// 	var objectIds []types.ObjectIdentifier
+// 	for _, key := range objectKeys {
+// 		objectIds = append(objectIds, types.ObjectIdentifier{Key: aws.String(key)})
+// 	}
+// 	output, err := basics.S3Client.DeleteObjects(context.TODO(), &s3.DeleteObjectsInput{
+// 		Bucket: aws.String(bucketName),
+// 		Delete: &types.Delete{Objects: objectIds},
+// 	})
+// 	if err != nil {
+// 		log.Printf("Couldn't delete objects from bucket %v. Here's why: %v\n", bucketName, err)
+// 	} else {
+// 		log.Printf("Deleted %v objects.\n", len(output.Deleted))
+// 	}
+// 	return err
+// }

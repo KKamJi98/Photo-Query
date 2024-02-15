@@ -35,7 +35,7 @@ func Bookmark(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "북마크 반영 실패 "})
 		return
 	}
-    log.Printf("affacted %v\t%T", result, result)
+	log.Printf("affacted %v\t%T", result, result)
 
-    c.JSON(http.StatusOK, gin.H{"message": "북마크 반영 성공", "bookmarked": picture.Bookmarked})
+	c.JSON(http.StatusOK, gin.H{"message": "북마크 반영 성공", "bookmarked": picture.Bookmarked})
 }

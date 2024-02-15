@@ -72,7 +72,7 @@ func GetPicturesByUserId(c *gin.Context) {
 	var rows *sql.Rows
 	var err error
 	// 사용자 ID별로 사진을 조회합니다.
-	if bookmark == "0"{
+	if bookmark == "0" {
 		rows, err = db.Query("SELECT picture_id, user_id, image_url, create_at, bookmarked FROM Pictures WHERE (user_id = ? AND picture_id < ?) ORDER BY picture_id DESC LIMIT ?", userId, last, limit)
 		if err != nil {
 			log.Printf("사용자 %v에 대한 사진 조회 오류: %v", userId, err)
@@ -148,7 +148,7 @@ func GetPictureByPictureId(c *gin.Context) {
 // 		log.Printf("%s", "last index not found")
 // 	}
 // 	log.Printf("last: %s", last)
-	
+
 // 	var pictures []Picture
 // 	userId := c.Param("user_id")
 
