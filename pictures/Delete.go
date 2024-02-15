@@ -104,7 +104,7 @@ func s3DeletePictures(picures []Picture, db *sql.DB) {
 		s3ImageOriginalObjectKeys = append(s3ImageOriginalObjectKeys, fmt.Sprintf("%s/%s/%s", "original", userId, imageName))
 		s3ImageThumbnailObjectKeys = append(s3ImageThumbnailObjectKeys, fmt.Sprintf("%s/%s/%s", "thumbnail", userId, imageName))
 	}
-	log.Printf("userId => %v\t imageName => %v \t %T", userId, imageName)
+	// log.Printf("userId => %v\t imageName => %v \t %T", userId, imageName)
 
 	log.Printf("%v", s3ImageOriginalObjectKeys)
 
