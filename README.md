@@ -13,6 +13,7 @@ port : 8080
 - [x] CI 구성 (Jenkins)
 - [x] 조회 무한 스크롤 지원
 - [x] 북마크 API
+- [x] 사진 삭제시 s3 original, thumbnail 사진까지 함께 삭제
 ## In Progress :fire:
 - [ ] S3에서 Object를 삭제 했을 때 그 사진에 대한 aws recognition의 collection까지 같이 삭제
 
