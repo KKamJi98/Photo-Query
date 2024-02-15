@@ -106,7 +106,7 @@ func s3DeletePictures(picures []Picture, db *sql.DB) {
 	}
 	// log.Printf("userId => %v\t imageName => %v \t %T", userId, imageName)
 
-	log.Printf("%v", s3ImageOriginalObjectKeys)
+	// log.Printf("%v", s3ImageOriginalObjectKeys)
 
 	// S3 클라이언트 초기화 (예시 코드, 실제 구현은 환경에 맞게 조정)
 	cfg, err := config.LoadDefaultConfig(context.TODO())
