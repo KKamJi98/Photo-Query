@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"image"
+	// "image"
 
 	"log"
 	"os"
@@ -22,13 +22,13 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 
 	"archive/zip"
-	"image/gif"
-	"image/jpeg"
-	"image/png"
+	// "image/gif"
+	// "image/jpeg"
+	// "image/png"
 	"mime/multipart"
 
 	"github.com/google/uuid"
-	"github.com/nfnt/resize"
+	// "github.com/nfnt/resize"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -208,34 +208,34 @@ func uploadToS3(fileReader io.Reader, fileName string, sess *session.Session, er
 		return
 	}
 
-	// 원본 데이터를 바탕으로 image.Image 객체 생성
-	img, _, err := image.Decode(bytes.NewReader(originalData))
-	if err != nil {
-		errChan <- fmt.Errorf("이미지 디코드 실패: %w", err)
-		return
-	}
+	// // 원본 데이터를 바탕으로 image.Image 객체 생성
+	// img, _, err := image.Decode(bytes.NewReader(originalData))
+	// if err != nil {
+	// 	errChan <- fmt.Errorf("이미지 디코드 실패: %w", err)
+	// 	return
+	// }
 
-	// 이미지 리사이징
-	resizedImg := resize.Thumbnail(300, 300, img, resize.Lanczos3)
+	// // 이미지 리사이징
+	// resizedImg := resize.Thumbnail(300, 300, img, resize.Lanczos3)
 
-	// 리사이즈된 이미지를 저장할 버퍼
-	var resizedBuf bytes.Buffer
-	switch strings.ToLower(fileExtension) {
-	case ".jpg", ".jpeg":
-		err = jpeg.Encode(&resizedBuf, resizedImg, nil)
-	case ".png":
-		err = png.Encode(&resizedBuf, resizedImg)
-	case ".gif":
-		err = gif.Encode(&resizedBuf, resizedImg, nil)
-	// BMP 포맷은 "golang.org/x/image/bmp" 패키지에서 Encode 메소드를 제공하지 않으므로, 필요시 추가 구현이 필요할 수 있습니다.
-	default:
-		errChan <- errors.New("지원하지 않는 파일 형식")
-		return
-	}
-	if err != nil {
-		errChan <- fmt.Errorf("리사이즈된 이미지 인코딩 실패: %w", err)
-		return
-	}
+	// // 리사이즈된 이미지를 저장할 버퍼
+	// var resizedBuf bytes.Buffer
+	// switch strings.ToLower(fileExtension) {
+	// case ".jpg", ".jpeg":
+	// 	err = jpeg.Encode(&resizedBuf, resizedImg, nil)
+	// case ".png":
+	// 	err = png.Encode(&resizedBuf, resizedImg)
+	// case ".gif":
+	// 	err = gif.Encode(&resizedBuf, resizedImg, nil)
+	// // BMP 포맷은 "golang.org/x/image/bmp" 패키지에서 Encode 메소드를 제공하지 않으므로, 필요시 추가 구현이 필요할 수 있습니다.
+	// default:
+	// 	errChan <- errors.New("지원하지 않는 파일 형식")
+	// 	return
+	// }
+	// if err != nil {
+	// 	errChan <- fmt.Errorf("리사이즈된 이미지 인코딩 실패: %w", err)
+	// 	return
+	// }
 
 	// 사용자 정의 메타데이터 설정
 	metadata := map[string]*string{
@@ -255,17 +255,17 @@ func uploadToS3(fileReader io.Reader, fileName string, sess *session.Session, er
 	}
 
 	// 리사이즈된 이미지 업로드
-	_, err = uploader.Upload(&s3manager.UploadInput{
-		Bucket: aws.String(s3BucketName),
-		Key:    aws.String(fmt.Sprintf("thumbnail/%v/%v%v", pic.UserID, uuid.String(), fileExtension)),
-		// Body:     bytes.NewReader(resizedBuf.Bytes()), // 리사이즈된 이미지 데이터 사용
-		Body:     bytes.NewReader(resizedBuf.Bytes()), // 리사이즈된 이미지 데이터 사용
-		Metadata: metadata,
-	})
-	if err != nil {
-		errChan <- fmt.Errorf("썸네일 이미지 업로드 실패: %w", err)
-		return
-	}
+	// _, err = uploader.Upload(&s3manager.UploadInput{
+	// 	Bucket: aws.String(s3BucketName),
+	// 	Key:    aws.String(fmt.Sprintf("thumbnail/%v/%v%v", pic.UserID, uuid.String(), fileExtension)),
+	// 	// Body:     bytes.NewReader(resizedBuf.Bytes()), // 리사이즈된 이미지 데이터 사용
+	// 	Body:     bytes.NewReader(resizedBuf.Bytes()), // 리사이즈된 이미지 데이터 사용
+	// 	Metadata: metadata,
+	// })
+	// if err != nil {
+	// 	errChan <- fmt.Errorf("썸네일 이미지 업로드 실패: %w", err)
+	// 	return
+	// }
 
 	db := database.ConnectDB()
 	defer db.Close()
