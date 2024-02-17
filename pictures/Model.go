@@ -29,7 +29,7 @@ func (ct *CustomTime) MarshalJSON() ([]byte, error) {
 	return json.Marshal(ct.Time.Format(time.RFC3339))
 }
 
-//커스텀 언마샬러, 시간 파싱하고 Valid 필드 설정
+// 커스텀 언마샬러, 시간 파싱하고 Valid 필드 설정
 func (ct *CustomTime) UnmarshalJSON(data []byte) error {
 	// 데이터가 "null"이면, Valid를 false로 설정
 	if string(data) == "null" {
