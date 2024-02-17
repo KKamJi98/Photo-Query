@@ -289,7 +289,7 @@ func uploadToS3(fileReader io.Reader, fileName string, sess *session.Session, er
 // isImageFile 함수는 파일 이름이 이미지 파일을 나타내는지 확인합니다.
 func isImageFile(fileName string) bool {
 	// 지원하는 이미지 파일 확장자를 추가합니다.
-	validExtensions := []string{".png", ".jpg"}
+	validExtensions := []string{".png", ".jpg", ".jpeg"}
 	// validExtensions := []string{".png", ".jpg", ".jpeg", ".gif"}
 	for _, ext := range validExtensions {
 		if strings.HasSuffix(strings.ToLower(fileName), ext) {
