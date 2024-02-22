@@ -77,10 +77,10 @@ func CreatePictures(c *gin.Context) {
 
 	var filesPerRoutine int
 
-	if len(fileHeader) < 32 {
+	if len(fileHeader) < 64 {
 		filesPerRoutine = 1
 	} else {
-		filesPerRoutine = (len(fileHeader) + 31) / 32
+		filesPerRoutine = (len(fileHeader) + 63) / 64
 	}
 	log.Printf("파일 일괄 처리 크기: %d", filesPerRoutine)
 
@@ -150,10 +150,10 @@ func processFile(file *multipart.FileHeader, errChan chan<- error, pic Picture, 
 			return
 		}
 		numOfFiles := len(zipReader.File)
-		if numOfFiles < 32 {
+		if numOfFiles < 64 {
 			numOfFiles = 1
 		} else {
-			numOfFiles = (len(zipReader.File) + 31) / 32
+			numOfFiles = (len(zipReader.File) + 63) / 64
 		}
 		var wg2 sync.WaitGroup
 		for i := 0; i < len(zipReader.File); i += numOfFiles {
