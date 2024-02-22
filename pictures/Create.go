@@ -87,7 +87,7 @@ func CreatePictures(c *gin.Context) {
 
 	db :=  database.ConnectDB()
 	defer db.Close()
-	// 각 파일에 대한 병렬 처리를 수행합니다. 
+	// 각 파일에 대한 병렬 처리를 수행합니다.  
 	for i := 0; i < len(fileHeader); i += filesPerRoutine {
 		end := i + filesPerRoutine
 		if end > len(fileHeader) {
