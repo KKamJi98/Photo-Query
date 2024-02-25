@@ -131,7 +131,3 @@ func GetPictureByPictureId(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"pictures": pictures})
 }
-
-func getPicutureTags(c *gin.Context) {
-	// 가장 많은 태그 추출
-}

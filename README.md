@@ -14,10 +14,13 @@ port : 8080
 - [x] 조회 무한 스크롤 지원
 - [x] 북마크 API
 - [x] 사진 삭제시 s3 original, thumbnail 사진까지 함께 삭제
+- [x] dynamoDB에서 데이터 불러오기
 ## In Progress :fire:
-- [ ] S3에서 Object를 삭제 했을 때 그 사진에 대한 aws recognition의 collection까지 같이 삭제
+- [ ] dynamoDB에서 불러온 모든 데이터에서 태그의 순위 구하기
+- [ ] 
 
 ## To Do :turtle:
+- [ ] 이미지 앨범 랭킹 기능 구현
 
 ## API 명세서
 https://docs.google.com/spreadsheets/d/1b4K21uRSqM8BMv-PaZLhBoVLw22vt5KjUfqVjiu8_5k/edit#gid=0
