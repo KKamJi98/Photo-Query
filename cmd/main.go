@@ -36,9 +36,10 @@ func main() {
 	r.GET("/picture/:picture_id", picture.GetPictureByPictureId)   // 특정 사진 조회 API
 	r.DELETE("/pictures", picture.DeletePicturesByPostId)          // 사진 삭제 API
 	r.POST("/pictures/bookmark/:picture_id", bookmark.Bookmark)    // 북마크 API
+	r.DELETE("/users/reset", picture.DeleteAllPictures)
 	// r.GET("/users/:user_id/pictures/bookmark", picture.GetPicuresByBookmarked) // 북마크 된 사진 조회 API
-	
-	r.GET("/test", picture.GetAllTags)
+
+	r.GET("/pictures/tagrank", picture.GetAllTags)
 
 	// 8080 포트에서 서버 시작
 	if err := r.Run(":8080"); err != nil {
