@@ -42,7 +42,7 @@ func GetAllTags(c *gin.Context) {
 		DynamoDbClient: dynamoDbClient,
 		TableName:      os.Getenv("DYNAMODB_TABLE"),
 	}
-
+	log.Println(tableBasics.TableName, userId)
 	// Query API 호출
 	response, err := tableBasics.DynamoDbClient.Query(context.TODO(), &dynamodb.QueryInput{
 		TableName:              aws.String(tableBasics.TableName),
