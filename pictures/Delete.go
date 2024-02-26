@@ -8,13 +8,14 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
-	"github.com/aws/aws-sdk-go/aws"
-	// "github.com/aws/aws-sdk-go/service/s3"
-	// "github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	dynamodbTypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	// "github.com/aws/smithy-go"
+	"github.com/aws/aws-sdk-go/aws"
+
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/gin-gonic/gin"
 )
@@ -42,7 +43,7 @@ func DeletePicturesByPostId(c *gin.Context) {
 	defer db.Close()
 
 	// s3에서 이미지파일 삭제
-	s3DeletePictures(pictures, db)
+	s3DeletePictures(c, pictures, db)
 
 	// 삭제 작업 결과를 추적하기 위한 카운터를 초기화합니다.
 	errorCount := 0
@@ -81,7 +82,7 @@ func DeletePicturesByPostId(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("%d개의 그림 삭제, %d개의 오류 발생, %d개의 그림 ID를 찾을 수 없음", successCount, errorCount, nofoundCount)})
 }
 
-func s3DeletePictures(picures []Picture, db *sql.DB) {
+func s3DeletePictures(c *gin.Context, picures []Picture, db *sql.DB) {
 	// db := database.ConnectDB()
 	// defer db.Close()
 	// TODO
@@ -90,6 +91,7 @@ func s3DeletePictures(picures []Picture, db *sql.DB) {
 	var imageName, userId string
 	var s3ImageOriginalObjectKeys []string
 	var s3ImageThumbnailObjectKeys []string
+	var pictureNamesToDelete []string
 
 	for _, pic := range picures {
 		query := db.QueryRow("SELECT image_url, user_id FROM Pictures WHERE picture_id =?", pic.PictureID)
@@ -103,6 +105,8 @@ func s3DeletePictures(picures []Picture, db *sql.DB) {
 		}
 		s3ImageOriginalObjectKeys = append(s3ImageOriginalObjectKeys, fmt.Sprintf("%s/%s/%s", "original", userId, imageName))
 		s3ImageThumbnailObjectKeys = append(s3ImageThumbnailObjectKeys, fmt.Sprintf("%s/%s/%s", "thumbnail", userId, imageName))
+
+		pictureNamesToDelete = append(pictureNamesToDelete, imageName)
 	}
 	// log.Printf("userId => %v\t imageName => %v \t %T", userId, imageName)
 
@@ -117,15 +121,22 @@ func s3DeletePictures(picures []Picture, db *sql.DB) {
 
 	// BucketBasics 인스턴스 생성
 	basics := BucketBasics{S3Client: s3Client}
-	basics.DeleteObjects("rapa-app-image-bucket", s3ImageOriginalObjectKeys)
-	basics.DeleteObjects("rapa-app-image-bucket", s3ImageThumbnailObjectKeys)
+	basics.DeleteObjects(c, "rapa-app-image-bucket", s3ImageOriginalObjectKeys)
+	basics.DeleteObjects(c, "rapa-app-image-bucket", s3ImageThumbnailObjectKeys)
+
+	dynamoDbClient := dynamodb.NewFromConfig(cfg)
+	tableBasics := TableBasics{
+		DynamoDbClient: dynamoDbClient,
+		TableName:      os.Getenv("DYNAMODB_TABLE"),
+	}
+	DeleteDynamoDBPictures(c, pictureNamesToDelete, tableBasics)
 }
 
 type BucketBasics struct {
 	S3Client *s3.Client
 }
 
-func (basics BucketBasics) DeleteObjects(bucketName string, objectKeys []string) error {
+func (basics BucketBasics) DeleteObjects(c *gin.Context, bucketName string, objectKeys []string) error {
 	if len(objectKeys) == 0 {
 		log.Printf("삭제할 객체 키가 제공되지 않았습니다.")
 		return nil // 또는 적절한 에러 반환
@@ -158,19 +169,29 @@ func (basics BucketBasics) DeleteObjects(bucketName string, objectKeys []string)
 	return nil
 }
 
-// func (basics BucketBasics) DeleteObjects(bucketName string, objectKeys []string) error {
-// 	var objectIds []types.ObjectIdentifier
-// 	for _, key := range objectKeys {
-// 		objectIds = append(objectIds, types.ObjectIdentifier{Key: aws.String(key)})
-// 	}
-// 	output, err := basics.S3Client.DeleteObjects(context.TODO(), &s3.DeleteObjectsInput{
-// 		Bucket: aws.String(bucketName),
-// 		Delete: &types.Delete{Objects: objectIds},
-// 	})
-// 	if err != nil {
-// 		log.Printf("Couldn't delete objects from bucket %v. Here's why: %v\n", bucketName, err)
-// 	} else {
-// 		log.Printf("Deleted %v objects.\n", len(output.Deleted))
-// 	}
-// 	return err
-// }
+func DeleteDynamoDBPictures(c *gin.Context, pictures []string, basics TableBasics) {
+	for _, pictureId := range pictures {
+		err := basics.DeleteDynamoDBPicture(c, pictureId)
+		if err != nil {
+			log.Printf("Error deleting picture with ID %s: %v", pictureId, err)
+		}
+	}
+}
+
+func (basics TableBasics) DeleteDynamoDBPicture(c *gin.Context, pictureId string) error {
+	userId := c.Param("user_id")
+	key := map[string]dynamodbTypes.AttributeValue{
+		"user_id":   &dynamodbTypes.AttributeValueMemberS{Value: userId},
+		"images_id": &dynamodbTypes.AttributeValueMemberS{Value: pictureId},
+	}
+
+	_, err := basics.DynamoDbClient.DeleteItem(context.TODO(), &dynamodb.DeleteItemInput{
+		TableName: aws.String(basics.TableName),
+		Key:       key,
+	})
+	if err != nil {
+		log.Printf("Couldn't delete %v from the table. Here's why: %v\n", pictureId, err)
+		return err
+	}
+	return nil
+}

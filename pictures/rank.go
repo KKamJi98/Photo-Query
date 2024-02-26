@@ -15,18 +15,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// Tag 구조체 정의
-type Tag struct {
-	UserId  string   `dynamodbav:"user_id"`
-	ImageId string   `dynamodbav:"images_id"`
-	Tags    []string `dynamodbav:"tags"`
-}
-
-type TableBasics struct {
-	DynamoDbClient *dynamodb.Client
-	TableName      string
-}
-
 func GetAllTags(c *gin.Context) {
 	// 프론트엔드에서 넘어온 userId 값 받기
 	userId := c.Query("user_id") // URL 파라미터에서 user_id 값을 읽음

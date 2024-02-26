@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"encoding/json"
 	"time"
+
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 )
 
 // Picture 구조체는 사진 레코드의 구조를 나타냅니다.
@@ -44,4 +46,16 @@ func (ct *CustomTime) UnmarshalJSON(data []byte) error {
 	ct.Valid = true // 파싱 성공 시, Valid를 true로 설정
 	ct.Time = t
 	return nil
+}
+
+// Tag 구조체 정의
+type Tag struct {
+	UserId  string   `dynamodbav:"user_id"`
+	ImageId string   `dynamodbav:"images_id"`
+	Tags    []string `dynamodbav:"tags"`
+}
+
+type TableBasics struct {
+	DynamoDbClient *dynamodb.Client
+	TableName      string
 }

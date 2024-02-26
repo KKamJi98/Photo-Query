@@ -7,9 +7,13 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/gin-gonic/gin"
 )
 
@@ -47,13 +51,14 @@ func DeleteAllPictures(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "사진 삭제 실패"})
 	}
 	rowsAffected, err := result.RowsAffected()
-	s3DeleteAllPictures(pictures, db)
+	s3DeleteAllPictures(c, pictures, db)
+	deleteItemsByPartitionKey(os.Getenv("DYNAMODB_TABLE"), "user_id", userId)
 	log.Printf("%d개 사진 삭제 완료", rowsAffected)
 	// 삭제 작업 결과 응답
 	c.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("%d개 사진 삭제 완료", rowsAffected)})
 }
 
-func s3DeleteAllPictures(pictures []Picture, db *sql.DB) {
+func s3DeleteAllPictures(c *gin.Context, pictures []Picture, db *sql.DB) {
 	var s3ImageOriginalObjectKeys []string
 	var s3ImageThumbnailObjectKeys []string
 
@@ -73,6 +78,53 @@ func s3DeleteAllPictures(pictures []Picture, db *sql.DB) {
 
 	// BucketBasics 인스턴스 생성
 	basics := BucketBasics{S3Client: s3Client}
-	basics.DeleteObjects("rapa-app-image-bucket", s3ImageOriginalObjectKeys)
-	basics.DeleteObjects("rapa-app-image-bucket", s3ImageThumbnailObjectKeys)
+	basics.DeleteObjects(c, "rapa-app-image-bucket", s3ImageOriginalObjectKeys)
+	basics.DeleteObjects(c, "rapa-app-image-bucket", s3ImageThumbnailObjectKeys)
+}
+
+func deleteItemsByPartitionKey(tableName, partitionKeyName, partitionKeyValue string) error {
+	cfg, err := config.LoadDefaultConfig(context.TODO())
+	if err != nil {
+		log.Printf("AWS config 로딩 실패: %v", err)
+		return err
+	}
+	svc := dynamodb.NewFromConfig(cfg)
+
+	// 파티션 키로 모든 항목 쿼리
+	queryOutput, err := svc.Query(context.TODO(), &dynamodb.QueryInput{
+		TableName:              &tableName,
+		KeyConditionExpression: aws.String(fmt.Sprintf("%s = :v", partitionKeyName)),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":v": &types.AttributeValueMemberS{Value: partitionKeyValue},
+		},
+	})
+	if err != nil {
+		log.Printf("항목 쿼리 실패: %v", err)
+		return err
+	}
+
+	// 쿼리 결과로 얻은 각 항목 삭제
+	for _, item := range queryOutput.Items {
+		sortKeyValue, ok := item["images_id"].(*types.AttributeValueMemberS)
+		if !ok {
+			log.Println("정렬 키(images_id) 추출 실패 또는 키 타입 불일치")
+			continue // 다음 항목 처리
+		}
+
+		_, err := svc.DeleteItem(context.TODO(), &dynamodb.DeleteItemInput{
+			TableName: &tableName,
+			Key: map[string]types.AttributeValue{
+				partitionKeyName: &types.AttributeValueMemberS{Value: partitionKeyValue},
+				"images_id":      sortKeyValue, // 정렬 키 이름을 "SortKeyName"에서 "images_id"로 변경
+			},
+		})
+		if err != nil {
+			log.Printf("항목 삭제 실패: %v", err)
+			// 실패한 항목에 대해 로깅하고 계속 진행할 수 있음
+			// 여기서는 에러를 반환하여 중단
+			return err
+		}
+	}
+
+	return nil
 }

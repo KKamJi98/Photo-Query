@@ -34,7 +34,7 @@ func main() {
 	r.GET("/pictures", picture.GetPictures)                        // 모든 사진 조회 API
 	r.GET("/users/:user_id/pictures", picture.GetPicturesByUserId) // 특정 사용자의 사진 조회 API
 	r.GET("/picture/:picture_id", picture.GetPictureByPictureId)   // 특정 사진 조회 API
-	r.DELETE("/pictures", picture.DeletePicturesByPostId)          // 사진 삭제 API
+	r.DELETE("/pictures/:user_id", picture.DeletePicturesByPostId) // 사진 삭제 API
 	r.POST("/pictures/bookmark/:picture_id", bookmark.Bookmark)    // 북마크 API
 	r.DELETE("/users/reset", picture.DeleteAllPictures)
 	// r.GET("/users/:user_id/pictures/bookmark", picture.GetPicuresByBookmarked) // 북마크 된 사진 조회 API
