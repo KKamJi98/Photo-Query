@@ -20,7 +20,7 @@ func GetPictures(c *gin.Context) {
 	var pictures []Picture
 
 	// 데이터베이스에서 모든 사진을 조회합니다.
-	rows, err := db.Query("SELECT picture_id, user_id, image_url, create_at, bookmarked FROM Pictures")
+	rows, err := db.Query("SELECT picture_id, user_id, image_url, created_at, bookmarked FROM Pictures")
 	if err != nil {
 		log.Printf("사진 조회 오류: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "사진 조회 오류"})
@@ -73,14 +73,14 @@ func GetPicturesByUserId(c *gin.Context) {
 	var err error
 	// 사용자 ID별로 사진을 조회합니다.
 	if bookmark == "0" {
-		rows, err = db.Query("SELECT picture_id, user_id, image_url, create_at, bookmarked FROM Pictures WHERE (user_id = ? AND picture_id < ?) ORDER BY picture_id DESC LIMIT ?", userId, last, limit)
+		rows, err = db.Query("SELECT picture_id, user_id, image_url, created_at, bookmarked FROM Pictures WHERE (user_id = ? AND picture_id < ?) ORDER BY picture_id DESC LIMIT ?", userId, last, limit)
 		if err != nil {
 			log.Printf("사용자 %v에 대한 사진 조회 오류: %v", userId, err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "사진 조회 오류"})
 			return
 		}
 	} else {
-		rows, err = db.Query("SELECT picture_id, user_id, image_url, create_at, bookmarked FROM Pictures WHERE (user_id = ? AND picture_id < ? AND bookmarked = 1) ORDER BY picture_id DESC LIMIT ?", userId, last, limit)
+		rows, err = db.Query("SELECT picture_id, user_id, image_url, created_at, bookmarked FROM Pictures WHERE (user_id = ? AND picture_id < ? AND bookmarked = 1) ORDER BY picture_id DESC LIMIT ?", userId, last, limit)
 		if err != nil {
 			log.Printf("사용자 %v에 대한 사진 조회 오류: %v", userId, err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "사진 조회 오류"})
@@ -111,7 +111,7 @@ func GetPictureByPictureId(c *gin.Context) {
 	pictureId := c.Param("picture_id")
 
 	// 사진 ID로 사진을 조회합니다.
-	rows, err := db.Query("SELECT picture_id, user_id, image_url, create_at, bookmarked FROM Pictures WHERE picture_id = ?", pictureId)
+	rows, err := db.Query("SELECT picture_id, user_id, image_url, created_at, bookmarked FROM Pictures WHERE picture_id = ?", pictureId)
 	if err != nil {
 		log.Printf("사진 조회 오류: %v, %v", pictureId, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "사진 조회 오류"})

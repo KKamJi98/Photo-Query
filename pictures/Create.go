@@ -233,7 +233,7 @@ func uploadToS3(fileReader io.Reader, fileName string, errChan chan<- error, pic
 	// imageURL := uploadOutput.Location
 	urls = append(urls, imageURL)
 
-	_, err = db.Exec("INSERT INTO Pictures (user_id, image_url, create_at, bookmarked) VALUES (?, ?, ?, ?)",
+	_, err = db.Exec("INSERT INTO Pictures (user_id, image_url, created_at, bookmarked) VALUES (?, ?, ?, ?)",
 		pic.UserID, imageURL, currentTime, 0)
 	if err != nil {
 		// log.Printf("%v 라는 사용자는 존재하지 않습니다.", pic.UserID)
@@ -281,7 +281,7 @@ func GetPicturesByUrls(c *gin.Context, urls []string, db *sql.DB) {
 		placeholders[i] = "?"
 		args[i] = url
 	}
-	query := fmt.Sprintf("SELECT picture_id, user_id, image_url, create_at, bookmarked FROM Pictures WHERE image_url IN (%s)", strings.Join(placeholders, ","))
+	query := fmt.Sprintf("SELECT picture_id, user_id, image_url, created_at, bookmarked FROM Pictures WHERE image_url IN (%s)", strings.Join(placeholders, ","))
 
 	// 쿼리를 실행합니다.
 	rows, err := db.Query(query, args...)
