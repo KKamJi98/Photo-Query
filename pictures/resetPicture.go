@@ -18,7 +18,7 @@ func DeleteAllPictures(c *gin.Context) {
 	// 요청에서 JSON 데이터를 추출하고 언마샬합니다.
 	db := database.ConnectDB()
 	defer db.Close()
-	
+
 	// s3에서 이미지파일 삭제
 	var pictures []Picture
 	userId := c.Query("user_id")
@@ -30,7 +30,7 @@ func DeleteAllPictures(c *gin.Context) {
 		return
 	}
 	defer rows.Close()
-	
+
 	for rows.Next() {
 		var picture Picture
 		if err := rows.Scan(&picture.UserID, &picture.ImageURL); err != nil {
@@ -40,11 +40,11 @@ func DeleteAllPictures(c *gin.Context) {
 		pictures = append(pictures, picture)
 	}
 	log.Println(len(pictures))
-	
+
 	// user_id로 삭제 시도
 	result, err := db.Exec("DELETE FROM Pictures WHERE user_id = ?", userId)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message" : "사진 삭제 실패"})
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "사진 삭제 실패"})
 	}
 	rowsAffected, err := result.RowsAffected()
 	s3DeleteAllPictures(pictures, db)
@@ -59,7 +59,7 @@ func s3DeleteAllPictures(pictures []Picture, db *sql.DB) {
 
 	log.Println(len(pictures))
 	for _, pic := range pictures {
-		log.Printf("%v/%v", pic.ImageURL, pic.PictureID)
+		log.Printf("ImageURL => %v \t PictureID => %v", pic.ImageURL, pic.UserID)
 		s3ImageOriginalObjectKeys = append(s3ImageOriginalObjectKeys, fmt.Sprintf("%s/%s/%s", "original", pic.UserID, pic.ImageURL))
 		s3ImageThumbnailObjectKeys = append(s3ImageThumbnailObjectKeys, fmt.Sprintf("%s/%s/%s", "thumbnail", pic.UserID, pic.ImageURL))
 	}
@@ -76,5 +76,3 @@ func s3DeleteAllPictures(pictures []Picture, db *sql.DB) {
 	basics.DeleteObjects("rapa-app-image-bucket", s3ImageOriginalObjectKeys)
 	basics.DeleteObjects("rapa-app-image-bucket", s3ImageThumbnailObjectKeys)
 }
-
-

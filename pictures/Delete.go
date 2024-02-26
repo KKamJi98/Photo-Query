@@ -133,6 +133,7 @@ func (basics BucketBasics) DeleteObjects(bucketName string, objectKeys []string)
 
 	var objectIdentifiers []types.ObjectIdentifier
 	for _, key := range objectKeys {
+		log.Println(key)
 		objectIdentifiers = append(objectIdentifiers, types.ObjectIdentifier{Key: aws.String(key)})
 	}
 
