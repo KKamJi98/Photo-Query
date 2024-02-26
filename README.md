@@ -15,9 +15,9 @@ port : 8080
 - [x] 북마크 API
 - [x] 사진 삭제시 s3 original, thumbnail 사진까지 함께 삭제
 - [x] dynamoDB에서 데이터 불러오기
+- [x] 모든 사진 삭제 API 생성
 ## In Progress :fire:
 - [ ] dynamoDB에서 불러온 모든 데이터에서 태그의 순위 구하기
-- [ ] 
 
 ## To Do :turtle:
 - [ ] 이미지 앨범 랭킹 기능 구현
