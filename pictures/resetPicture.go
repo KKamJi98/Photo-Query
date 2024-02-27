@@ -105,7 +105,7 @@ func deleteItemsByPartitionKey(tableName, partitionKeyName, partitionKeyValue st
 	}
 
 	// 쿼리 결과로 얻은 각 항목 삭제
-	count := 0
+	count := 1
 	for _, item := range queryOutput.Items {
 		if count % 100 == 0 {
 			time.Sleep(time.Second * 1)
@@ -129,6 +129,7 @@ func deleteItemsByPartitionKey(tableName, partitionKeyName, partitionKeyValue st
 			// 여기서는 에러를 반환하여 중단
 			return err
 		}
+		count ++
 	}
 
 	return nil
