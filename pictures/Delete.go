@@ -182,7 +182,7 @@ func (basics TableBasics) DeleteDynamoDBPicture(c *gin.Context, pictureId string
 	userId := c.Param("user_id")
 	key := map[string]dynamodbTypes.AttributeValue{
 		"user_id":   &dynamodbTypes.AttributeValueMemberS{Value: userId},
-		"images_id": &dynamodbTypes.AttributeValueMemberS{Value: pictureId},
+		"image_url": &dynamodbTypes.AttributeValueMemberS{Value: pictureId},
 	}
 
 	_, err := basics.DynamoDbClient.DeleteItem(context.TODO(), &dynamodb.DeleteItemInput{
