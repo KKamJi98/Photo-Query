@@ -174,7 +174,7 @@ func DeleteDynamoDBPictures(c *gin.Context, pictures []string, basics TableBasic
 	// count := 1
 	for _, pictureId := range pictures {
 		// if count % 100 == 0 {
-			// time.Sleep(2000 * time.Second)
+		// time.Sleep(2000 * time.Second)
 		// }
 		err := basics.DeleteDynamoDBPicture(c, pictureId)
 		if err != nil {

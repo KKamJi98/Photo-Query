@@ -108,7 +108,7 @@ func deleteItemsByPartitionKey(tableName, partitionKeyName, partitionKeyValue st
 	// count := 1
 	for _, item := range queryOutput.Items {
 		// if count % 100 == 0 {
-			// time.Sleep(time.Second * 1)
+		// time.Sleep(time.Second * 1)
 		// }
 		sortKeyValue, ok := item["image_url"].(*types.AttributeValueMemberS)
 		if !ok {
