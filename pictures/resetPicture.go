@@ -105,11 +105,11 @@ func deleteItemsByPartitionKey(tableName, partitionKeyName, partitionKeyValue st
 	}
 
 	// 쿼리 결과로 얻은 각 항목 삭제
-	count := 1
+	// count := 1
 	for _, item := range queryOutput.Items {
-		if count % 100 == 0 {
-			time.Sleep(time.Second * 1)
-		}
+		// if count % 100 == 0 {
+			// time.Sleep(time.Second * 1)
+		// }
 		sortKeyValue, ok := item["image_url"].(*types.AttributeValueMemberS)
 		if !ok {
 			log.Println("정렬 키(image_url) 추출 실패 또는 키 타입 불일치")
@@ -129,7 +129,7 @@ func deleteItemsByPartitionKey(tableName, partitionKeyName, partitionKeyValue st
 			// 여기서는 에러를 반환하여 중단
 			return err
 		}
-		count ++
+		// count ++
 	}
 
 	return nil
