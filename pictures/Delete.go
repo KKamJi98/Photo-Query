@@ -173,7 +173,7 @@ func (basics BucketBasics) DeleteObjects(c *gin.Context, bucketName string, obje
 func DeleteDynamoDBPictures(c *gin.Context, pictures []string, basics TableBasics) {
 	count := 0
 	for _, pictureId := range pictures {
-		if count%100 == 0 {
+		if count % 100 == 0 {
 			time.Sleep(time.Second * 1)
 		}
 		err := basics.DeleteDynamoDBPicture(c, pictureId)

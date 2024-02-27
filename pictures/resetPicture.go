@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
@@ -104,7 +105,11 @@ func deleteItemsByPartitionKey(tableName, partitionKeyName, partitionKeyValue st
 	}
 
 	// 쿼리 결과로 얻은 각 항목 삭제
+	count := 0
 	for _, item := range queryOutput.Items {
+		if count % 100 == 0 {
+			time.Sleep(time.Second * 1)
+		}
 		sortKeyValue, ok := item["image_url"].(*types.AttributeValueMemberS)
 		if !ok {
 			log.Println("정렬 키(image_url) 추출 실패 또는 키 타입 불일치")
