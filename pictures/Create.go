@@ -193,11 +193,11 @@ func uploadToS3(fileReader io.Reader, fileName string, errChan chan<- error, pic
 		return
 	}
 
-	uploader := s3manager.NewUploader(sess, func(u *s3manager.Uploader) {
-		u.PartSize = 5 * 1024 * 1024 // 5MB per part
-		u.Concurrency = 10           // Adjust based on your application's needs and AWS limits
-	})
-	// uploader := s3manager.NewUploader(sess)
+	// uploader := s3manager.NewUploader(sess, func(u *s3manager.Uploader) {
+	// 	u.PartSize = 5 * 1024 * 1024 // 5MB per part
+	// 	u.Concurrency = 10           // Adjust based on your application's needs and AWS limits
+	// })
+	uploader := s3manager.NewUploader(sess)
 
 	uuid := uuid.New()
 	fileExtension := getFileExtension(fileName)
