@@ -40,7 +40,7 @@ func main() {
 	// r.GET("/users/:user_id/pictures/bookmark", picture.GetPicuresByBookmarked) // 북마크 된 사진 조회 API
 
 	r.GET("/pictures/tagrank", picture.GetAllTags)
-
+	r.GET("/users/:user_id", picture.GetPicturesByTags)
 	// 8080 포트에서 서버 시작
 	if err := r.Run(":8080"); err != nil {
 		log.Fatalf("Failed to run server: %v", err) // 서버 실행 실패 시 로그 출력 및 애플리케이션 종료
