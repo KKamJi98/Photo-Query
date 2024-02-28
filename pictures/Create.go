@@ -77,10 +77,10 @@ func CreatePictures(c *gin.Context) {
 
 	var filesPerRoutine int
 
-	if len(fileHeader) < 256 {
+	if len(fileHeader) < 64 {
 		filesPerRoutine = 1
 	} else {
-		filesPerRoutine = (len(fileHeader) + 255) / 256
+		filesPerRoutine = (len(fileHeader) + 63) / 64
 	}
 	log.Printf("파일 일괄 처리 크기: %d", filesPerRoutine)
 
@@ -149,10 +149,10 @@ func processFile(file *multipart.FileHeader, errChan chan<- error, pic Picture, 
 			return
 		}
 		numOfFiles := len(zipReader.File)
-		if numOfFiles < 256 {
+		if numOfFiles < 64 {
 			numOfFiles = 1
 		} else {
-			numOfFiles = (len(zipReader.File) + 255) / 256
+			numOfFiles = (len(zipReader.File) + 63) / 64
 		}
 		var wg2 sync.WaitGroup
 		for i := 0; i < len(zipReader.File); i += numOfFiles {
@@ -194,7 +194,7 @@ func uploadToS3(fileReader io.Reader, fileName string, errChan chan<- error, pic
 	}
 
 	uploader := s3manager.NewUploader(sess, func(u *s3manager.Uploader) {
-		u.PartSize = 5 * 1024 * 1024 // 64MB per part
+		u.PartSize = 5 * 1024 * 1024 // 5MB per part
 		u.Concurrency = 10           // Adjust based on your application's needs and AWS limits
 	})
 	// uploader := s3manager.NewUploader(sess)
