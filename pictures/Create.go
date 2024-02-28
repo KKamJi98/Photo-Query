@@ -2,7 +2,7 @@ package picture
 
 import (
 	database "ace-app/databases"
-	"database/sql"
+	// "database/sql"
 	// "bytes"
 	"encoding/json"
 	"errors"
@@ -77,15 +77,15 @@ func CreatePictures(c *gin.Context) {
 
 	var filesPerRoutine int
 
-	if len(fileHeader) < 64 {
+	if len(fileHeader) < 128 {
 		filesPerRoutine = 1
 	} else {
-		filesPerRoutine = (len(fileHeader) + 63) / 64
+		filesPerRoutine = (len(fileHeader) + 127) / 128
 	}
 	log.Printf("파일 일괄 처리 크기: %d", filesPerRoutine)
 
-	db := database.ConnectDB()
-	defer db.Close()
+	// db := database.ConnectDB()
+	// defer db.Close()
 	// 각 파일에 대한 병렬 처리를 수행합니다.
 	for i := 0; i < len(fileHeader); i += filesPerRoutine {
 		end := i + filesPerRoutine
@@ -99,7 +99,7 @@ func CreatePictures(c *gin.Context) {
 		go func(files []*multipart.FileHeader) {
 			defer wg.Done()
 			for _, file := range files {
-				processFile(file, errChan, picture, db)
+				processFile(file, errChan, picture)
 			}
 		}(fileHeader[i:end])
 	}
@@ -123,12 +123,12 @@ func CreatePictures(c *gin.Context) {
 	if uploadFileCount == 0 {
 		c.JSON(200, gin.H{"message": fmt.Sprintf("%v개 파일 처리 완료 => 존재하지 않는 사용자", uploadFileCount)})
 	} else {
-		GetPicturesByUrls(c, urls, db)
+		GetPicturesByUrls(c, urls)
 	}
 }
 
 // processFile는 개별 파일 처리 및 S3에 업로드합니다.
-func processFile(file *multipart.FileHeader, errChan chan<- error, pic Picture, db *sql.DB) {
+func processFile(file *multipart.FileHeader, errChan chan<- error, pic Picture) {
 
 	src, err := file.Open()
 	if err != nil {
@@ -149,10 +149,10 @@ func processFile(file *multipart.FileHeader, errChan chan<- error, pic Picture, 
 			return
 		}
 		numOfFiles := len(zipReader.File)
-		if numOfFiles < 64 {
+		if numOfFiles < 128 {
 			numOfFiles = 1
 		} else {
-			numOfFiles = (len(zipReader.File) + 63) / 64
+			numOfFiles = (len(zipReader.File) + 127) / 128
 		}
 		var wg2 sync.WaitGroup
 		for i := 0; i < len(zipReader.File); i += numOfFiles {
@@ -172,7 +172,7 @@ func processFile(file *multipart.FileHeader, errChan chan<- error, pic Picture, 
 							continue
 						}
 						defer zipFileReader.Close()
-						uploadToS3(zipFileReader, file.Name, errChan, pic, db)
+						uploadToS3(zipFileReader, file.Name, errChan, pic)
 					}
 				}
 				if end == len(zipReader.File) {
@@ -182,12 +182,12 @@ func processFile(file *multipart.FileHeader, errChan chan<- error, pic Picture, 
 		}
 		wg2.Wait()
 	} else if isImageFile(file.Filename) {
-		uploadToS3(src, file.Filename, errChan, pic, db)
+		uploadToS3(src, file.Filename, errChan, pic)
 	}
 }
 
 // uploadToS3 함수는 파일을 AWS S3에 업로드합니다.
-func uploadToS3(fileReader io.Reader, fileName string, errChan chan<- error, pic Picture, db *sql.DB) {
+func uploadToS3(fileReader io.Reader, fileName string, errChan chan<- error, pic Picture) {
 	if fileReader == nil {
 		errChan <- errors.New("fileReader가 nil입니다 => 업로드할 파일이 없음")
 		return
@@ -226,8 +226,8 @@ func uploadToS3(fileReader io.Reader, fileName string, errChan chan<- error, pic
 		return
 	}
 
-	// db := database.ConnectDB()
-	// defer db.Close()
+	db := database.ConnectDB()
+	defer db.Close()
 	currentTime := time.Now()
 	imageURL := uuid.String() + fileExtension
 	// imageURL := uploadOutput.Location
@@ -268,9 +268,9 @@ func getFileExtension(fileName string) string {
 }
 
 // GetPicturesByUrls 함수는 URL을 기반으로 Picture 정보를 검색하고 반환합니다.
-func GetPicturesByUrls(c *gin.Context, urls []string, db *sql.DB) {
-	// db := database.ConnectDB()
-	// defer db.Close()
+func GetPicturesByUrls(c *gin.Context, urls []string) {
+	db := database.ConnectDB()
+	defer db.Close()
 
 	var pictures []Picture
 

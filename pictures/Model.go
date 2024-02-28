@@ -60,3 +60,10 @@ type TableBasics struct {
 	DynamoDbClient *dynamodb.Client
 	TableName      string
 }
+
+type ImageInfo struct {
+	UserID     string    // 사용자 ID
+	ImageURL   string    // 이미지 URL
+	CreatedAt  time.Time // 생성 시간
+	Bookmarked int       // 북마크 여부
+}
