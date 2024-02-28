@@ -50,10 +50,10 @@ func (ct *CustomTime) UnmarshalJSON(data []byte) error {
 
 // Tag 구조체 정의
 type Tag struct {
-	UserId  string   `dynamodbav:"user_id"`
-	ImageId string   `dynamodbav:"image_url"`
-	Tags    []string `dynamodbav:"tags"`
-	UploadTime int64 `dynamodbav:"upload_time"`
+	UserId     string   `dynamodbav:"user_id"`
+	ImageId    string   `dynamodbav:"image_url"`
+	Tags       []string `dynamodbav:"tags"`
+	UploadTime int64    `dynamodbav:"upload_time"`
 }
 
 type TableBasics struct {

@@ -141,7 +141,7 @@ func GetPictureByPictureId(c *gin.Context) {
 }
 
 func GetPicturesByTags(c *gin.Context) {
-		/**
+	/**
 	1. Query Paramerter와 Path Parameter로 tag와 user_id 받기 [x]
 	2. DynamoDB에서 user_id로 조회 [v]
 	3. DynamoDB에서 쿼리파라미터로 들어온 태그가 존재하는 것만 선택후 배열에 저장
@@ -157,11 +157,11 @@ func GetPicturesByTags(c *gin.Context) {
 	log.Printf("tag => %v", tagFilter)
 
 	userId := c.Param("user_id")
-	if userId == ""{
+	if userId == "" {
 		log.Printf("user_id => %v", "no user_id specified")
 	}
 	log.Printf("%v", userId)
-	
+
 	limit := c.Query("limit")
 	if limit == "" {
 		limit = "20"
