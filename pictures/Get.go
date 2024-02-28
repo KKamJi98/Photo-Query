@@ -149,7 +149,7 @@ func GetPicturesByTags(c *gin.Context) {
 	4. limit, lastindex로 무한스크롤 구현 (슬라이스 사용)
 	4. 반환
 	*/
-	
+
 	tagFilter := c.Query("tag")
 	if tagFilter == "" {
 		log.Printf("%v", "no tag specified")
@@ -244,20 +244,20 @@ func GetPicturesByTags(c *gin.Context) {
 	startIndex := int(lastIndex)
 	endIndex := startIndex + int(limitInt)
 
-	// 슬라이스 범위 확인
-	if startIndex < 0 || endIndex > len(selectedTags) {
-		// 범위가 유효하지 않은 경우의 처리
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Index out of range"})
-		return
-	}
-
 	// endIndex가 슬라이스 길이를 초과하지 않도록 조정
 	if endIndex > len(selectedTags) {
 		endIndex = len(selectedTags)
 	}
 
+	log.Printf("last => %v, end => %v len => %v", startIndex, endIndex, len(selectedTags))
+
+	// 슬라이스 범위 확인
+	if startIndex < 0 || endIndex > len(selectedTags) || startIndex >= len(selectedTags) {
+		// 범위가 유효하지 않은 경우의 처리
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Index out of range"})
+		return
+	}
+
 	// 선택된 태그의 부분 슬라이스 반환
 	c.JSON(http.StatusOK, gin.H{"pictures": selectedTags[startIndex:endIndex]})
-
-
 }
