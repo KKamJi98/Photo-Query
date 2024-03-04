@@ -4,12 +4,14 @@ import (
 	"ace-app/databases"
 	"context"
 	"database/sql"
+	"fmt"
 	"log"
 	"math"
 	"net/http"
 	"os"
-	"sort"
+	// "sort"
 	"strconv"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -219,13 +221,40 @@ func GetPicturesByTags(c *gin.Context) {
 		}
 	}
 
-	sort.Slice(selectedTags, func(i, j int) bool {
-		return selectedTags[i].UploadTime > selectedTags[j].UploadTime
-	})
+	placeholders := make([]string, len(selectedTags))
+	params := make([]interface{}, len(selectedTags))
+	for i, id := range selectedTags {
+		placeholders[i] = "?"
+		params[i] = id.ImageId
+	}
+	inClause := strings.Join(placeholders, ",")
 
-	// for _, tag := range selectedTags {
-	// 	log.Printf("%v\n", tag.UploadTime)
-	// }
+	db := database.ConnectDB()
+	defer db.Close()
+
+	query := fmt.Sprintf("SELECT picture_id, user_id, image_url, created_at FROM Pictures WHERE picture_id IN (%s)", inClause)
+
+	rows, err := db.Query(query, params...)
+	if err != nil {
+		log.Printf("사진 조회 오류: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "사진 조회 오류"})
+		return
+	}
+	defer rows.Close()
+
+	var pictures []Picture
+	for rows.Next() {
+		var picture Picture
+		if err := rows.Scan(&picture.PictureID, &picture.UserID, &picture.ImageURL, &picture.CreatedAt, &picture.Bookmarked); err != nil {
+			log.Printf("사진 스캔 오류: %v", err)
+			continue
+		}
+		pictures = append(pictures, picture)
+	}
+	// sort.Slice(selectedTags, func(i, j int) bool {
+	// 	return selectedTags[i].UploadTime > selectedTags[j].UploadTime
+	// })
+
 	lastIndex, err := strconv.ParseInt(last, 10, 64)
 	if err != nil {
 		// 에러 처리: last 값을 파싱할 수 없음
@@ -245,19 +274,19 @@ func GetPicturesByTags(c *gin.Context) {
 	endIndex := startIndex + int(limitInt)
 
 	// endIndex가 슬라이스 길이를 초과하지 않도록 조정
-	if endIndex > len(selectedTags) {
-		endIndex = len(selectedTags)
+	if endIndex > len(pictures) {
+		endIndex = len(pictures)
 	}
 
-	log.Printf("last => %v, end => %v len => %v", startIndex, endIndex, len(selectedTags))
+	log.Printf("last => %v, end => %v len => %v", startIndex, endIndex, len(pictures))
 
 	// 슬라이스 범위 확인
-	if startIndex < 0 || endIndex > len(selectedTags) || startIndex >= len(selectedTags) {
+	if startIndex < 0 || endIndex > len(selectedTags) || startIndex >= len(pictures) {
 		// 범위가 유효하지 않은 경우의 처리
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Index out of range"})
 		return
 	}
 
 	// 선택된 태그의 부분 슬라이스 반환
-	c.JSON(http.StatusOK, gin.H{"pictures": selectedTags[startIndex:endIndex]})
+	c.JSON(http.StatusOK, gin.H{"pictures": pictures[startIndex:endIndex]})
 }
