@@ -69,8 +69,8 @@ func GetRank(c *gin.Context, data *dynamodb.QueryOutput) {
 
 	// 태그와 등장 횟수를 저장할 슬라이스 생성
 	type tagCount struct {
-		Tag   string
-		Count int
+		Tag   string	`json:"tag"`
+		Count int		`json:"count"`
 	}
 	var sortedTags []tagCount
 	for tag, count := range tagCounts {
