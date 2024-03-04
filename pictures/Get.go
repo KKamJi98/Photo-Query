@@ -245,7 +245,7 @@ func GetPicturesByTags(c *gin.Context) {
 	var pictures []Picture
 	for rows.Next() {
 		var picture Picture
-		if err := rows.Scan(&picture.PictureID, &picture.UserID, &picture.ImageURL, &picture.CreatedAt, &picture.Bookmarked); err != nil {
+		if err := rows.Scan(&picture.PictureID, &picture.UserID, &picture.ImageURL, &picture.CreatedAt); err != nil {
 			log.Printf("사진 스캔 오류: %v", err)
 			continue
 		}
