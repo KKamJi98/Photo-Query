@@ -232,7 +232,7 @@ func GetPicturesByTags(c *gin.Context) {
 	db := database.ConnectDB()
 	defer db.Close()
 
-	query := fmt.Sprintf("SELECT picture_id, user_id, image_url, created_at FROM Pictures WHERE image_url IN (%s)", inClause)
+	query := fmt.Sprintf("SELECT picture_id, user_id, image_url, created_at, bookmarked FROM Pictures WHERE image_url IN (%s)", inClause)
 
 	rows, err := db.Query(query, params...)
 	if err != nil {
@@ -245,7 +245,7 @@ func GetPicturesByTags(c *gin.Context) {
 	var pictures []Picture
 	for rows.Next() {
 		var picture Picture
-		if err := rows.Scan(&picture.PictureID, &picture.UserID, &picture.ImageURL, &picture.CreatedAt); err != nil {
+		if err := rows.Scan(&picture.PictureID, &picture.UserID, &picture.ImageURL, &picture.CreatedAt, &picture.Bookmarked); err != nil {
 			log.Printf("사진 스캔 오류: %v", err)
 			continue
 		}
