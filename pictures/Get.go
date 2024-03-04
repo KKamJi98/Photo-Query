@@ -232,7 +232,7 @@ func GetPicturesByTags(c *gin.Context) {
 	db := database.ConnectDB()
 	defer db.Close()
 
-	query := fmt.Sprintf("SELECT picture_id, user_id, image_url, created_at FROM Pictures WHERE picture_id IN (%s)", inClause)
+	query := fmt.Sprintf("SELECT picture_id, user_id, image_url, created_at FROM Pictures WHERE image_url IN (%s)", inClause)
 
 	rows, err := db.Query(query, params...)
 	if err != nil {
