@@ -2,7 +2,7 @@ package picture
 
 import (
 	database "ace-app/databases"
-	"io/ioutil"
+	// "io/ioutil"
 	// "database/sql"
 	// "bytes"
 	"encoding/json"
@@ -145,7 +145,7 @@ func processFile(file *multipart.FileHeader, errChan chan<- error, pic Picture) 
 	// ZIP 파일 처리
 	if strings.HasSuffix(file.Filename, ".zip") {
 		// 임시 파일로 쓰기
-		tempFile, err := ioutil.TempFile("", "prefix")
+		tempFile, err := os.CreateTemp("", "prefix")
 		if err != nil {
 			errChan <- fmt.Errorf("임시 파일 생성 실패: %v", err)
 			return
