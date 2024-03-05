@@ -2,7 +2,6 @@ package picture
 
 import (
 	database "ace-app/databases"
-	// "io/ioutil"
 	// "database/sql"
 	// "bytes"
 	"encoding/json"
@@ -78,10 +77,10 @@ func CreatePictures(c *gin.Context) {
 
 	var filesPerRoutine int
 
-	if len(fileHeader) < 256 {
+	if len(fileHeader) < 512 {
 		filesPerRoutine = 1
 	} else {
-		filesPerRoutine = (len(fileHeader) + 255) / 256
+		filesPerRoutine = (len(fileHeader) + 511) / 512
 	}
 	log.Printf("파일 일괄 처리 크기: %d", filesPerRoutine)
 
@@ -181,10 +180,10 @@ func processFile(file *multipart.FileHeader, errChan chan<- error, pic Picture) 
 		// 	return
 		// }
 		numOfFiles := len(zipReader.File)
-		if numOfFiles < 256 {
+		if numOfFiles < 512 {
 			numOfFiles = 1
 		} else {
-			numOfFiles = (len(zipReader.File) + 255) / 256
+			numOfFiles = (len(zipReader.File) + 511) / 512
 		}
 		var wg2 sync.WaitGroup
 		for i := 0; i < len(zipReader.File); i += numOfFiles {
