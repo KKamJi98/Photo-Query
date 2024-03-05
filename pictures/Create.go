@@ -143,11 +143,42 @@ func processFile(file *multipart.FileHeader, errChan chan<- error, pic Picture) 
 
 	// ZIP 파일 처리
 	if strings.HasSuffix(file.Filename, ".zip") {
-		zipReader, err := zip.NewReader(src, file.Size)
-		if err != nil {
-			errChan <- err
-			return
-		}
+		// 임시 파일로 쓰기
+        tempFile, err := ioutil.TempFile("", "prefix")
+        if err != nil {
+            errChan <- fmt.Errorf("임시 파일 생성 실패: %v", err)
+            return
+        }
+        defer os.Remove(tempFile.Name()) // 사용 후 임시 파일 삭제
+
+        _, err = io.Copy(tempFile, src)
+        if err != nil {
+            errChan <- fmt.Errorf("ZIP 파일을 임시 파일에 복사하는 데 실패: %v", err)
+            return
+        }
+
+        // 임시 파일에서 zip 파일 열기
+        if _, err := tempFile.Seek(0, 0); err != nil { // Seek to start
+            errChan <- fmt.Errorf("파일 포인터 재설정 실패: %v", err)
+            return
+        }
+
+        fileInfo, err := tempFile.Stat()
+        if err != nil {
+            errChan <- fmt.Errorf("임시 파일 정보 가져오기 실패: %v", err)
+            return
+        }
+
+        zipReader, err := zip.NewReader(tempFile, fileInfo.Size())
+        if err != nil {
+            errChan <- fmt.Errorf("zip.NewReader 오류: %v", err)
+            return
+        }
+		// zipReader, err := zip.NewReader(src, file.Size)
+		// if err != nil {
+		// 	errChan <- err
+		// 	return
+		// }
 		numOfFiles := len(zipReader.File)
 		if numOfFiles < 256 {
 			numOfFiles = 1
