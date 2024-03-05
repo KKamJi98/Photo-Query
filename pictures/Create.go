@@ -267,7 +267,7 @@ func uploadToS3(fileReader io.Reader, fileName string, errChan chan<- error, pic
 	_, err = db.Exec("INSERT INTO Pictures (user_id, image_url, created_at, bookmarked) VALUES (?, ?, ?, ?)",
 		pic.UserID, imageURL, currentTime, 0)
 	if err != nil {
-		// log.Printf("%v 라는 사용자는 존재하지 않습니다.", pic.UserID)
+		// log.Printf("%v 라는 사용자는 존재하지 않습니다.", pic.UserID) 
 		errChan <- err
 		return
 	}
