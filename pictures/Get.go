@@ -9,6 +9,8 @@ import (
 	"math"
 	"net/http"
 	"os"
+	"sort"
+
 	// "sort"
 	"strconv"
 	"strings"
@@ -251,9 +253,9 @@ func GetPicturesByTags(c *gin.Context) {
 		}
 		pictures = append(pictures, picture)
 	}
-	// sort.Slice(selectedTags, func(i, j int) bool {
-	// 	return selectedTags[i].UploadTime > selectedTags[j].UploadTime
-	// })
+	sort.Slice(pictures, func(i, j int) bool {
+		return pictures[i].PictureID > pictures[j].PictureID
+	})
 
 	lastIndex, err := strconv.ParseInt(last, 10, 64)
 	if err != nil {
