@@ -261,7 +261,7 @@ func uploadToS3(fileReader io.Reader, fileName string, errChan chan<- error, pic
 	defer db.Close()
 	currentTime := time.Now()
 	imageURL := uuid.String() + fileExtension
-	// imageURL := uploadOutput.Location
+	// imageURL := uploadOutput.Location 
 	urls = append(urls, imageURL)
 
 	_, err = db.Exec("INSERT INTO Pictures (user_id, image_url, created_at, bookmarked) VALUES (?, ?, ?, ?)",
