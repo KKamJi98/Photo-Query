@@ -83,13 +83,13 @@ func GetRank(c *gin.Context, data *dynamodb.QueryOutput) {
 	})
 
 	// 상위 5개 태그 선택
-	var topTags []tagCount
-	if len(sortedTags) > 6 {
-		topTags = sortedTags[:6]
-	} else {
-		topTags = sortedTags
-	}
+	// var topTags []tagCount
+	// if len(sortedTags) > 6 {
+	// 	topTags = sortedTags[:6]
+	// } else {
+	// 	topTags = sortedTags
+	// }
 
 	// 등장 횟수에 따른 상위 5개 태그 반환
-	c.JSON(http.StatusOK, gin.H{"topTags": topTags})
+	c.JSON(http.StatusOK, gin.H{"topTags": sortedTags})
 }
