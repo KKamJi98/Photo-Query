@@ -244,12 +244,12 @@ func uploadToS3(fileReader io.Reader, fileName string, errChan chan<- error, pic
 	metadata := map[string]*string{
 		"user_id": aws.String(fmt.Sprintf("%v", pic.UserID)), // 예를 들어 pic 구조체에서 UserID 필드를 사용
 	}
-	s3BucketName := os.Getenv("BUCKET_NAME")
+	// s3BucketName := os.Getenv("BUCKET_NAME")
 	// acceleratedEndpoint := fmt.Sprintf("%s.s3-accelerate.amazonaws.com", s3BucketName)
-
+	acceleratedBucketEndpoint := "rapa-app-image-bucket.s3-accelerate.amazonaws.com"
 	_, err := uploader.Upload(&s3manager.UploadInput{
 		// Bucket:   aws.String(acceleratedEndpoint),
-		Bucket:   aws.String(s3BucketName),
+		Bucket:   aws.String(acceleratedBucketEndpoint),
 		Key:      aws.String(fmt.Sprintf("original/%v/%v%v", pic.UserID, uuid.String(), fileExtension)),
 		Body:     fileReader, // 메모리에 저장된 원본 데이터 사용
 		Metadata: metadata,
