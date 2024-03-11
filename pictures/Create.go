@@ -63,7 +63,8 @@ func CreatePictures(c *gin.Context) {
 
 	// AWS 세션을 생성합니다.
 	sess, err = session.NewSession(&aws.Config{
-		Region: aws.String("us-east-1"),
+		Region: 			aws.String("us-east-1"),
+		S3UseAccelerate: 	aws.Bool(true),
 	})
 	if err != nil {
 		log.Printf("AWS 세션 생성 오류: %v", err)
@@ -244,12 +245,10 @@ func uploadToS3(fileReader io.Reader, fileName string, errChan chan<- error, pic
 	metadata := map[string]*string{
 		"user_id": aws.String(fmt.Sprintf("%v", pic.UserID)), // 예를 들어 pic 구조체에서 UserID 필드를 사용
 	}
-	// s3BucketName := os.Getenv("BUCKET_NAME")
-	// acceleratedEndpoint := fmt.Sprintf("%s.s3-accelerate.amazonaws.com", s3BucketName)
-	acceleratedBucketEndpoint := "rapa-app-image-bucket.s3-accelerate.amazonaws.com"
+	s3BucketName := os.Getenv("BUCKET_NAME")
+
 	_, err := uploader.Upload(&s3manager.UploadInput{
-		// Bucket:   aws.String(acceleratedEndpoint),
-		Bucket:   aws.String(acceleratedBucketEndpoint),
+		Bucket:   aws.String(s3BucketName),
 		Key:      aws.String(fmt.Sprintf("original/%v/%v%v", pic.UserID, uuid.String(), fileExtension)),
 		Body:     fileReader, // 메모리에 저장된 원본 데이터 사용
 		Metadata: metadata,
