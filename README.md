@@ -1,4 +1,4 @@
-# ACS-Team-KKamJi
+# Amazon Photo Query - AI기반 사진 앨범 서비스
 
 port : 8080
 
@@ -23,6 +23,13 @@ port : 8080
 ## In Progress :fire:
 
 ## To Do :turtle:
+
+## 아키텍처
+### 클라우드 인프라
+![image](https://github.com/War-Oxi/ACE-Team-KKamJi/assets/72260110/78b741a7-3437-4f64-b430-b0248175b9c0)
+
+### 이미지 업로드 로직
+![image](https://github.com/War-Oxi/ACE-Team-KKamJi/assets/72260110/5a51b26a-a296-4ac7-a436-a0112473c2d3)
 
 ## API 명세서
 https://docs.google.com/spreadsheets/d/1b4K21uRSqM8BMv-PaZLhBoVLw22vt5KjUfqVjiu8_5k/edit#gid=0
