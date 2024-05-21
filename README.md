@@ -10,7 +10,7 @@ port : 8080
 - 얼굴 검색  
 [![얼굴 검색](http://img.youtube.com/vi/jOgX3f43c1Q/0.jpg)](https://youtu.be/jOgX3f43c1Q)
 
-- 태그 자동 생성
+- 태그 자동 생성  
 [![태그 자동 생성](http://img.youtube.com/vi/GlHXMVzgk-s/0.jpg)](https://youtu.be/GlHXMVzgk-s)
 
 
