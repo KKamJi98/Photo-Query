@@ -8,7 +8,7 @@ port : 8080
 [![자연어로 사진 검색](http://img.youtube.com/vi/jOgX3f43c1Q/0.jpg)](https://youtu.be/jOgX3f43c1Q)
 
 - 얼굴 검색  
-[![얼굴 검색](http://img.youtube.com/vi/jOgX3f43c1Q/0.jpg)](https://youtu.be/jOgX3f43c1Q)
+[![얼굴 검색](http://img.youtube.com/vi/373Xvy3tddM/0.jpg)](https://youtu.be/373Xvy3tddM)
 
 - 태그 자동 생성  
 [![태그 자동 생성](http://img.youtube.com/vi/GlHXMVzgk-s/0.jpg)](https://youtu.be/GlHXMVzgk-s)
