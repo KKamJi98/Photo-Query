@@ -1,18 +1,20 @@
 # Amazon Photo Query - AI기반 사진 앨범 서비스
+
 port : 8080
 
 ## Demo
 
-- 태그 자동 생성
-
-<iframe width="560" height="315" src="https://www.youtube.com/embed/GlHXMVzgk-s" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-
 - 자연어로 사진 검색  
-<iframe width="560" height="315" src="https://www.youtube.com/embed/YOUR_VIDEO_ID" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-- 얼굴 검색  
-<iframe width="560" height="315" src="https://www.youtube.com/embed/YOUR_VIDEO_ID" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+[![자연어로 사진 검색](http://img.youtube.com/vi/59USvjy2toI/0.jpg)](https://youtu.be/59USvjy2toI)
 
-https://studio.youtube.com/video/GlHXMVzgk-s/edit
+- 얼굴 검색  
+[![얼굴 검색](http://img.youtube.com/vi/jOgX3f43c1Q/0.jpg)](https://youtu.be/jOgX3f43c1Q)
+
+- 태그 자동 생성
+[![태그 자동 생성](http://img.youtube.com/vi/GlHXMVzgk-s/0.jpg)](https://youtu.be/GlHXMVzgk-s)
+
+
+
 
 ## Complate :thumbsup:
 - [x] Local Image S3 Upload
